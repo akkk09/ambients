@@ -183,11 +183,21 @@ class AuthManager {
     // 5. Tasks & Marks
     if (user.tasks && user.tasks.length > 0) {
       storage.saveTasks(user.tasks);
-      if (window.taskManager) window.taskManager.renderTasks();
+      if (window.taskManager) {
+        window.taskManager.myTasks = user.tasks;
+        if (typeof window.taskManager.renderMyTasks === 'function') {
+          window.taskManager.renderMyTasks();
+        }
+      }
     }
     if (user.marks && user.marks.length > 0) {
       storage.saveMarks(user.marks);
-      if (window.marksManager) window.marksManager.renderMarks();
+      if (window.marksManager) {
+        window.marksManager.marks = user.marks;
+        if (typeof window.marksManager.renderMarks === 'function') {
+          window.marksManager.renderMarks();
+        }
+      }
     }
 
     // 6. Theme
