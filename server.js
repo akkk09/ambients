@@ -518,7 +518,7 @@ async function saveStoredUser(userObj) {
 }
 
 // 5A. Register
-app.post('/api/auth/register', async (req, res) => {
+app.post(['/api/auth/register', '/auth/register'], async (req, res) => {
   try {
     const { username, password, profile } = req.body;
     if (!username || !password) {
@@ -576,12 +576,12 @@ app.post('/api/auth/register', async (req, res) => {
     return res.status(201).json({ token, user: safeUser });
   } catch (err) {
     console.error('[Auth Register Error]:', err);
-    res.status(500).json({ error: 'Registration failed' });
+    res.status(500).json({ error: err.message || 'Registration failed' });
   }
 });
 
 // 5B. Login
-app.post('/api/auth/login', async (req, res) => {
+app.post(['/api/auth/login', '/auth/login'], async (req, res) => {
   try {
     const { username, password } = req.body;
     if (!username || !password) {
@@ -607,12 +607,12 @@ app.post('/api/auth/login', async (req, res) => {
     return res.json({ token, user: safeUser });
   } catch (err) {
     console.error('[Auth Login Error]:', err);
-    res.status(500).json({ error: 'Login failed' });
+    res.status(500).json({ error: err.message || 'Login failed' });
   }
 });
 
 // 5C. Get Current User (Session Check)
-app.get('/api/auth/me', async (req, res) => {
+app.get(['/api/auth/me', '/auth/me'], async (req, res) => {
   const token = req.headers['authorization']?.replace('Bearer ', '');
   if (!token || !sessions.has(token)) {
     return res.status(401).json({ error: 'Unauthorized' });
@@ -627,7 +627,7 @@ app.get('/api/auth/me', async (req, res) => {
 });
 
 // 5D. Sync Account Data to Server / Supabase
-app.post('/api/auth/sync', async (req, res) => {
+app.post(['/api/auth/sync', '/auth/sync'], async (req, res) => {
   const token = req.headers['authorization']?.replace('Bearer ', '');
   if (!token || !sessions.has(token)) {
     return res.status(401).json({ error: 'Unauthorized' });
@@ -656,7 +656,7 @@ app.post('/api/auth/sync', async (req, res) => {
 });
 
 // 5E. Logout
-app.post('/api/auth/logout', (req, res) => {
+app.post(['/api/auth/logout', '/auth/logout'], (req, res) => {
   const token = req.headers['authorization']?.replace('Bearer ', '');
   if (token && sessions.has(token)) {
     sessions.delete(token);
@@ -664,9 +664,17 @@ app.post('/api/auth/logout', (req, res) => {
   return res.json({ success: true });
 });
 
-// Fallback route to serve index.html for single-page routing
+// Fallback: Serve index.html for non-API GET page navigations (Express 5 compatible)
+app.use((req, res, next) => {
+  if (req.method === 'GET' && !req.url.startsWith('/api') && !req.url.startsWith('/auth') && !req.url.startsWith('/ai')) {
+    return res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  }
+  next();
+});
+
+// Fallback for unmatched API requests: Always JSON
 app.use((req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  res.status(404).json({ error: `Route not found: ${req.method} ${req.url}` });
 });
 
 // Create HTTP Server
