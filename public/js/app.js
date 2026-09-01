@@ -67,9 +67,15 @@ class AmbientsApp {
     this.setupThemePicker();
 
     // Render Lucide Icons
-    if (window.lucide) {
-      window.lucide.createIcons();
-    }
+    const renderIcons = () => {
+      if (window.lucide && typeof window.lucide.createIcons === 'function') {
+        window.lucide.createIcons();
+      }
+    };
+    renderIcons();
+    setTimeout(renderIcons, 100);
+    setTimeout(renderIcons, 500);
+    window.refreshIcons = renderIcons;
   }
 
   resolveRoomId() {
