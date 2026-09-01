@@ -12,6 +12,7 @@
  * - Latency / Ping-Pong heartbeat
  */
 
+require('dotenv').config();
 const express = require('express');
 const http = require('http');
 const path = require('path');
@@ -276,13 +277,21 @@ if (!fs.existsSync(DATA_DIR)) {
 }
 
 // 1. Aiven / Managed PostgreSQL Database Connection
-const pgConnectionString = process.env.AIVEN_DATABASE_URL || process.env.DATABASE_URL || process.env.POSTGRES_URL || process.env.PGURI || '';
+const rawPgUri = process.env.AIVEN_DATABASE_URL || process.env.DATABASE_URL || process.env.POSTGRES_URL || process.env.PGURI || '';
 let pgPool = null;
 
-if (pgConnectionString) {
+if (rawPgUri) {
   try {
+    // Parse URL and strip search params to allow explicit rejectUnauthorized: false for Aiven self-signed CA
+    let cleanConnStr = rawPgUri;
+    try {
+      const parsed = new URL(rawPgUri);
+      parsed.search = '';
+      cleanConnStr = parsed.toString();
+    } catch (_) {}
+
     pgPool = new Pool({
-      connectionString: pgConnectionString,
+      connectionString: cleanConnStr,
       ssl: {
         rejectUnauthorized: false
       },
