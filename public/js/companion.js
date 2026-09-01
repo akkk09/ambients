@@ -112,16 +112,20 @@ export class CompanionManager {
     this.addXp(5);
     audio.playTaskDing();
 
-    // Spawn water/heart particles
-    if (this.myCompanionIconEl) {
-      const rect = this.myCompanionIconEl.getBoundingClientRect();
+    // Spawn water/heart particles exactly above the water/companion button
+    const targetEl = this.waterBtn || this.myCompanionIconEl;
+    if (targetEl) {
+      const rect = targetEl.getBoundingClientRect();
       const p = document.createElement('div');
-      p.className = 'particle-nudge text-2xl';
+      p.className = 'particle-nudge text-xl';
       p.textContent = this.companion.type === 'cat' ? '💖' : '💧';
+      p.style.position = 'fixed';
       p.style.left = `${rect.left + rect.width / 2}px`;
-      p.style.top = `${rect.top}px`;
+      p.style.top = `${rect.top - 8}px`;
+      p.style.zIndex = '9999';
+      p.style.pointerEvents = 'none';
       document.body.appendChild(p);
-      setTimeout(() => p.remove(), 2000);
+      setTimeout(() => p.remove(), 1800);
     }
   }
 

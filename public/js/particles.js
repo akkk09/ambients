@@ -13,8 +13,14 @@ class ThemeFXEngine {
   init() {
     this.canvas = document.createElement('canvas');
     this.canvas.id = 'theme-fx-canvas';
-    this.canvas.className = 'fixed inset-0 pointer-events-none z-40';
+    this.canvas.className = 'fixed inset-0 pointer-events-none';
+    this.canvas.style.position = 'fixed';
+    this.canvas.style.top = '0';
+    this.canvas.style.left = '0';
+    this.canvas.style.width = '100vw';
+    this.canvas.style.height = '100vh';
     this.canvas.style.pointerEvents = 'none';
+    this.canvas.style.zIndex = '9999';
     document.body.appendChild(this.canvas);
     this.ctx = this.canvas.getContext('2d');
 
