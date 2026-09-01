@@ -112,20 +112,33 @@ export class CompanionManager {
     this.addXp(5);
     audio.playTaskDing();
 
-    // Spawn water/heart particles exactly above the water/companion button
+    // Trigger squash-and-stretch bounce on the pet icon
+    if (this.myCompanionIconEl) {
+      this.myCompanionIconEl.classList.remove('pet-bounce');
+      void this.myCompanionIconEl.offsetWidth; // trigger reflow
+      this.myCompanionIconEl.classList.add('pet-bounce');
+    }
+
+    // Spawn 3 staggered water/heart splash particles arching upwards
     const targetEl = this.waterBtn || this.myCompanionIconEl;
     if (targetEl) {
       const rect = targetEl.getBoundingClientRect();
-      const p = document.createElement('div');
-      p.className = 'particle-nudge text-xl';
-      p.textContent = this.companion.type === 'cat' ? '💖' : '💧';
-      p.style.position = 'fixed';
-      p.style.left = `${rect.left + rect.width / 2}px`;
-      p.style.top = `${rect.top - 8}px`;
-      p.style.zIndex = '9999';
-      p.style.pointerEvents = 'none';
-      document.body.appendChild(p);
-      setTimeout(() => p.remove(), 1800);
+      const emojis = this.companion.type === 'cat' ? ['💖', '✨', '🐾'] : ['💧', '💦', '✨'];
+      
+      emojis.forEach((emoji, i) => {
+        const p = document.createElement('div');
+        p.className = 'particle-splash text-lg';
+        p.textContent = emoji;
+        p.style.position = 'fixed';
+        const spreadX = (i - 1) * 14;
+        p.style.left = `${rect.left + rect.width / 2 + spreadX}px`;
+        p.style.top = `${rect.top - 10}px`;
+        p.style.zIndex = '9999';
+        p.style.pointerEvents = 'none';
+        p.style.animationDelay = `${i * 0.08}s`;
+        document.body.appendChild(p);
+        setTimeout(() => p.remove(), 1600);
+      });
     }
   }
 

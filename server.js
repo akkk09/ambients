@@ -262,14 +262,27 @@ Return ONLY a valid JSON object matching this schema:
 });
 
 // =========================================================================
-// 5. USER ACCOUNTS & PERSISTENT AUTHENTICATION API
+// 5. USER ACCOUNTS & PERSISTENT AUTHENTICATION API (SUPABASE + LOCAL STORE)
 // =========================================================================
 const fs = require('fs');
+const { createClient } = require('@supabase/supabase-js');
+
 const DATA_DIR = path.join(__dirname, 'data');
 const USERS_FILE = path.join(DATA_DIR, 'users.json');
 
 if (!fs.existsSync(DATA_DIR)) {
   fs.mkdirSync(DATA_DIR, { recursive: true });
+}
+
+// Initialize Supabase Client if credentials are provided in env
+const supabaseUrl = process.env.SUPABASE_URL || '';
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || '';
+const supabase = (supabaseUrl && supabaseKey) ? createClient(supabaseUrl, supabaseKey) : null;
+
+if (supabase) {
+  console.log('[Supabase] Connected to Cloud Database at:', supabaseUrl);
+} else {
+  console.log('[Supabase] No SUPABASE_URL found; using local data/users.json storage.');
 }
 
 function loadUsersFromDisk() {
@@ -293,14 +306,83 @@ function saveUsersToDisk(usersObj) {
 }
 
 const userDatabase = loadUsersFromDisk();
-const sessions = new Map(); // token -> userId
+const sessions = new Map(); // token -> username
 
 function hashPassword(password, salt) {
   return crypto.scryptSync(password, salt, 32).toString('hex');
 }
 
+// Unified Store Helpers
+async function getStoredUser(username) {
+  const clean = username.trim().toLowerCase();
+  if (supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('ambients_users')
+        .select('*')
+        .eq('username', clean)
+        .maybeSingle();
+
+      if (!error && data) {
+        return {
+          id: data.id,
+          username: data.username,
+          salt: data.salt,
+          passwordHash: data.password_hash,
+          profile: data.profile || {},
+          examTarget: data.exam_target,
+          metrics: data.metrics,
+          activityLog: data.activity_log || {},
+          tasks: data.tasks || [],
+          marks: data.marks || [],
+          companion: data.companion || {},
+          geminiKey: data.gemini_key || '',
+          chatHistory: data.chat_history || [],
+          theme: data.theme || 'nextjs',
+          createdAt: data.created_at
+        };
+      }
+    } catch (err) {
+      console.warn('[Supabase Fetch Error]:', err.message);
+    }
+  }
+  return userDatabase[clean] || null;
+}
+
+async function saveStoredUser(userObj) {
+  const clean = userObj.username.trim().toLowerCase();
+  userDatabase[clean] = userObj;
+  saveUsersToDisk(userDatabase);
+
+  if (supabase) {
+    try {
+      const payload = {
+        id: userObj.id,
+        username: clean,
+        salt: userObj.salt,
+        password_hash: userObj.passwordHash,
+        profile: userObj.profile,
+        exam_target: userObj.examTarget,
+        metrics: userObj.metrics,
+        activity_log: userObj.activityLog,
+        tasks: userObj.tasks,
+        marks: userObj.marks,
+        companion: userObj.companion,
+        gemini_key: userObj.geminiKey,
+        chat_history: userObj.chatHistory,
+        theme: userObj.theme,
+        updated_at: new Date().toISOString()
+      };
+      const { error } = await supabase.from('ambients_users').upsert(payload);
+      if (error) console.warn('[Supabase Save Warning]:', error.message);
+    } catch (err) {
+      console.warn('[Supabase Upsert Error]:', err.message);
+    }
+  }
+}
+
 // 5A. Register
-app.post('/api/auth/register', (req, res) => {
+app.post('/api/auth/register', async (req, res) => {
   try {
     const { username, password, profile } = req.body;
     if (!username || !password) {
@@ -308,7 +390,8 @@ app.post('/api/auth/register', (req, res) => {
     }
 
     const cleanUsername = username.trim().toLowerCase();
-    if (userDatabase[cleanUsername]) {
+    const existing = await getStoredUser(cleanUsername);
+    if (existing) {
       return res.status(409).json({ error: 'Username already taken' });
     }
 
@@ -344,12 +427,11 @@ app.post('/api/auth/register', (req, res) => {
       companion: { type: 'bonsai', name: 'Zen Bonsai', xp: 20, stage: 1 },
       geminiKey: '',
       chatHistory: [],
-      theme: 'midnight',
+      theme: 'nextjs',
       createdAt: Date.now()
     };
 
-    userDatabase[cleanUsername] = newUser;
-    saveUsersToDisk(userDatabase);
+    await saveStoredUser(newUser);
 
     const token = 'tok_' + crypto.randomBytes(24).toString('hex');
     sessions.set(token, cleanUsername);
@@ -363,7 +445,7 @@ app.post('/api/auth/register', (req, res) => {
 });
 
 // 5B. Login
-app.post('/api/auth/login', (req, res) => {
+app.post('/api/auth/login', async (req, res) => {
   try {
     const { username, password } = req.body;
     if (!username || !password) {
@@ -371,7 +453,7 @@ app.post('/api/auth/login', (req, res) => {
     }
 
     const cleanUsername = username.trim().toLowerCase();
-    const user = userDatabase[cleanUsername];
+    const user = await getStoredUser(cleanUsername);
 
     if (!user) {
       return res.status(401).json({ error: 'Invalid username or password' });
@@ -394,29 +476,29 @@ app.post('/api/auth/login', (req, res) => {
 });
 
 // 5C. Get Current User (Session Check)
-app.get('/api/auth/me', (req, res) => {
+app.get('/api/auth/me', async (req, res) => {
   const token = req.headers['authorization']?.replace('Bearer ', '');
   if (!token || !sessions.has(token)) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
   const username = sessions.get(token);
-  const user = userDatabase[username];
+  const user = await getStoredUser(username);
   if (!user) return res.status(404).json({ error: 'User not found' });
 
   const { salt: _, passwordHash: __, ...safeUser } = user;
   return res.json({ user: safeUser });
 });
 
-// 5D. Sync Account Data to Server
-app.post('/api/auth/sync', (req, res) => {
+// 5D. Sync Account Data to Server / Supabase
+app.post('/api/auth/sync', async (req, res) => {
   const token = req.headers['authorization']?.replace('Bearer ', '');
   if (!token || !sessions.has(token)) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
   const username = sessions.get(token);
-  const user = userDatabase[username];
+  const user = await getStoredUser(username);
   if (!user) return res.status(404).json({ error: 'User not found' });
 
   const { profile, examTarget, metrics, activityLog, tasks, marks, companion, geminiKey, chatHistory, theme } = req.body;
@@ -432,7 +514,7 @@ app.post('/api/auth/sync', (req, res) => {
   if (chatHistory !== undefined) user.chatHistory = chatHistory;
   if (theme !== undefined) user.theme = theme;
 
-  saveUsersToDisk(userDatabase);
+  await saveStoredUser(user);
 
   return res.json({ success: true, lastSynced: Date.now() });
 });
@@ -1142,21 +1224,25 @@ wss.on('connection', (ws, req) => {
   });
 });
 
-// Periodic server-side timer tick broadcast (every 1 second when active timer is running)
-setInterval(() => {
-  for (const [roomId, room] of rooms.entries()) {
-    if (room.timer.isRunning && room.peers.size > 0) {
-      const timerState = computeTimerState(room.timer);
-      broadcastToRoom(room, {
-        type: 'TIMER_TICK',
-        payload: timerState,
-      });
+// Start standalone Node.js server with WebSocket timer loop
+if (require.main === module) {
+  // Periodic server-side timer tick broadcast (every 1 second when active timer is running)
+  setInterval(() => {
+    for (const [roomId, room] of rooms.entries()) {
+      if (room.timer.isRunning && room.peers.size > 0) {
+        const timerState = computeTimerState(room.timer);
+        broadcastToRoom(room, {
+          type: 'TIMER_TICK',
+          payload: timerState,
+        });
+      }
     }
-  }
-}, 1000);
+  }, 1000);
 
-// Start server
-server.listen(PORT, () => {
-  console.log(`✨ Ambients Server is live at: http://localhost:${PORT}`);
-  console.log(`   Real-time WebSocket server ready for remote study sessions.`);
-});
+  server.listen(PORT, () => {
+    console.log(`✨ Ambients Server is live at: http://localhost:${PORT}`);
+    console.log(`   Real-time WebSocket server ready for remote study sessions.`);
+  });
+}
+
+module.exports = app;
