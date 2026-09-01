@@ -24,6 +24,7 @@ import { storage } from './storage.js';
 import { authManager } from './auth.js';
 import { overseerManager } from './chat.js';
 import { themeFX } from './particles.js';
+import { renderIcons } from './icons.js';
 
 class AmbientsApp {
   constructor() {
@@ -66,15 +67,10 @@ class AmbientsApp {
     // 9. Ambient Color Themes
     this.setupThemePicker();
 
-    // Render Lucide Icons
-    const renderIcons = () => {
-      if (window.lucide && typeof window.lucide.createIcons === 'function') {
-        window.lucide.createIcons();
-      }
-    };
+    // Render Vector Icons
     renderIcons();
-    setTimeout(renderIcons, 100);
-    setTimeout(renderIcons, 500);
+    setTimeout(() => renderIcons(), 100);
+    setTimeout(() => renderIcons(), 400);
     window.refreshIcons = renderIcons;
   }
 
