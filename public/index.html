@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ambients — Ambient Study & Co-Working</title>
+  
+  <!-- PWA Manifest & Meta -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#090a0f">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              cyan: '#38bdf8',
+              violet: '#a855f7',
+              emerald: '#10b981',
+              amber: '#f59e0b',
+              rose: '#f43f5e'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Google Fonts: Plus Jakarta Sans & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+
+  <!-- KaTeX LaTeX Math CDN -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-slate-950 text-slate-100 flex flex-col justify-between min-h-screen selection:bg-sky-500/30 selection:text-sky-200">
+
+  <!-- ========================================================================= -->
+  <!-- 1. CLEAN TOP NAVIGATION BAR                                               -->
+  <!-- ========================================================================= -->
+  <header class="w-full border-b border-white/5 bg-slate-950/80 backdrop-blur-xl sticky top-0 z-40 px-4 lg:px-8 py-2.5">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3 md:gap-6">
+      
+      <!-- Left: Logo & Room Connection Pill -->
+      <div class="flex items-center gap-3.5 w-full md:w-auto justify-between md:justify-start">
+        <div class="flex items-center gap-2.5">
+          <span class="w-2.5 h-2.5 rounded-full bg-sky-400 ambient-dot-pulse"></span>
+          <span class="font-bold tracking-wider text-sm text-white flex items-center gap-1.5">
+            AMBIENTS
+            <span class="text-[10px] uppercase px-1.5 py-0.5 rounded bg-white/10 text-slate-400 font-mono">duo</span>
+          </span>
+        </div>
+
+        <div class="h-4 w-px bg-white/10 hidden sm:block"></div>
+
+        <!-- Room Code & Quick Copy Pill -->
+        <div class="flex items-center gap-1.5 bg-white/5 border border-white/10 rounded-full px-3 py-1 text-xs shadow-inner">
+          <span class="text-slate-400">Room:</span>
+          <span id="current-room-badge" class="font-mono text-sky-400 font-medium">focus-zone</span>
+          <button id="copy-invite-btn" title="Copy invite link to clipboard" class="text-slate-400 hover:text-white transition-colors ml-1 p-0.5 rounded">
+            <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+          </button>
+          <button id="change-room-btn" title="Switch or create room" class="text-slate-500 hover:text-slate-300 transition-colors p-0.5 rounded">
+            <i data-lucide="refresh-cw" class="w-3 h-3"></i>
+          </button>
+        </div>
+
+        <!-- Zen Mode Quick Button -->
+        <button id="top-zen-btn" title="Fullscreen Zen Flow (F)" class="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 text-xs text-slate-300 hover:text-white transition-all">
+          <i data-lucide="maximize-2" class="w-3 h-3 text-sky-400"></i>
+          <span>Zen</span>
+        </button>
+      </div>
+
+      <!-- Center: Synchronized Pomodoro / Stopwatch Controls -->
+      <div class="flex flex-col items-center gap-1.5 w-full md:w-auto">
+        <!-- Mode Tabs -->
+        <div class="flex items-center gap-1 bg-white/5 p-0.5 rounded-lg border border-white/10 text-xs">
+          <button id="mode-25m" class="px-2.5 py-0.5 rounded-md font-medium transition-all text-white bg-white/15 border border-white/20 shadow-sm">25m Focus</button>
+          <button id="mode-5m" class="px-2.5 py-0.5 rounded-md font-medium transition-all text-slate-400 hover:text-slate-200">5m Break</button>
+          <button id="mode-50m" class="px-2.5 py-0.5 rounded-md font-medium transition-all text-slate-400 hover:text-slate-200">50m Deep</button>
+          <button id="mode-stopwatch" class="px-2.5 py-0.5 rounded-md font-medium transition-all text-slate-400 hover:text-slate-200">Stopwatch</button>
+        </div>
+
+        <!-- Digits & Actions -->
+        <div class="flex items-center gap-3">
+          <div class="relative flex flex-col items-center">
+            <span id="timer-digits" class="font-mono-timer text-2xl font-bold tracking-tight text-white select-none">25:00</span>
+            <div class="w-24 h-1 bg-white/10 rounded-full overflow-hidden mt-0.5">
+              <div id="timer-progress-bar" class="h-full bg-sky-400 transition-all duration-300" style="width: 0%;"></div>
+            </div>
+          </div>
+
+          <button id="timer-toggle-btn" class="flex items-center gap-1.5 px-3 py-1 rounded-lg border border-sky-500/40 bg-sky-500/20 text-sky-400 hover:bg-sky-500/30 text-xs font-semibold tracking-wide transition-all shadow-sm">
+            <span class="btn-icon"><i data-lucide="play" class="w-3.5 h-3.5"></i></span>
+            <span class="btn-text">Start</span>
+          </button>
+
+          <button id="timer-reset-btn" title="Reset Timer" class="p-1 rounded-lg border border-white/10 bg-white/5 text-slate-400 hover:text-white hover:bg-white/10 text-xs transition-all">
+            <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+          </button>
+
+          <button id="timer-link-toggle-btn" title="Timer is Synchronized with Partner" class="p-1 rounded-lg border border-sky-500/30 bg-sky-500/10 text-sky-400 hover:bg-sky-500/20 text-xs transition-all flex items-center gap-1">
+            <i data-lucide="link-2" class="w-3.5 h-3.5"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Right: Ambient Tools & Overseer Dock -->
+      <div class="flex items-center gap-2 w-full md:w-auto justify-end">
+        <!-- Gemini AI Focus Overseer Chatbar Button -->
+        <button id="toggle-overseer-btn" title="Open Gemini Focus Overseer (⌘/)" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-500/20 border border-purple-500/40 hover:bg-purple-500/30 text-purple-200 hover:text-white text-xs font-semibold transition-all shadow-sm">
+          <i data-lucide="bot" class="w-4 h-4 text-purple-400"></i>
+          <span class="hidden sm:inline">AI Overseer</span>
+        </button>
+
+        <div class="h-4 w-px bg-white/10 hidden sm:block"></div>
+
+        <!-- Flashcards Drill -->
+        <button id="open-flashcards-btn" title="Active Recall Flashcards Drill" class="p-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-purple-500/40 text-purple-300 hover:text-purple-200 transition-all">
+          <i data-lucide="layers" class="w-4 h-4"></i>
+        </button>
+
+        <!-- Exam Countdown & Trajectory -->
+        <button id="open-exam-btn" title="Exam Target & Score Trajectory" class="p-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-amber-500/40 text-amber-300 hover:text-amber-200 transition-all">
+          <i data-lucide="calendar" class="w-4 h-4"></i>
+        </button>
+
+        <!-- 30-Day Activity Heatmap -->
+        <button id="open-heatmap-btn" title="30-Day Study Activity Heatmap" class="p-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-emerald-500/40 text-emerald-300 hover:text-emerald-200 transition-all">
+          <i data-lucide="activity" class="w-4 h-4"></i>
+        </button>
+
+        <!-- Soundscapes & Binaural Mixer -->
+        <button id="soundscape-mixer-btn" title="Ambient Soundscapes & Binaural Beats" class="p-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-emerald-400/40 text-slate-300 hover:text-white transition-all">
+          <i data-lucide="headphones" class="w-4 h-4 text-emerald-400"></i>
+        </button>
+
+        <!-- Dual Scratchpad -->
+        <button id="toggle-scratchpad-btn" title="Open Dual Scratchpad (⌘J)" class="relative p-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-sky-500/40 text-slate-300 hover:text-white transition-all">
+          <i data-lucide="file-text" class="w-4 h-4"></i>
+          <span id="scratchpad-badge-dot" class="hidden absolute top-1 right-1 w-2 h-2 rounded-full bg-sky-400 animate-ping"></span>
+        </button>
+
+        <!-- Settings (Audio, Themes, AI Key) -->
+        <button id="audio-toggle-btn" title="Settings (Themes, Bells & AI Key)" class="p-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 text-slate-300 hover:text-white transition-all">
+          <i data-lucide="settings" class="w-4 h-4"></i>
+        </button>
+
+        <!-- User Authentication Button / Profile Badge -->
+        <button id="top-auth-btn" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/10 text-xs font-semibold text-white transition-all">
+          <i data-lucide="user" class="w-3.5 h-3.5"></i>
+          <span class="hidden sm:inline">Log In</span>
+        </button>
+
+        <div id="top-user-badge" class="hidden flex items-center gap-2 bg-white/5 border border-white/10 rounded-xl px-2.5 py-1 text-xs">
+          <div id="top-user-avatar" class="w-5 h-5 rounded-full bg-sky-500 text-slate-950 font-bold flex items-center justify-center text-[10px]">
+            U
+          </div>
+          <span id="top-user-name" class="font-medium text-slate-200 max-w-[80px] truncate">User</span>
+          <button id="top-logout-btn" title="Log Out" class="text-slate-400 hover:text-rose-400 transition-colors ml-0.5">
+            <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ========================================================================= -->
+  <!-- 2. MAIN VIEWPORT: REVAMPED DUAL-DESK SPLIT VIEW                           -->
+  <!-- ========================================================================= -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 lg:p-6 flex flex-col justify-center">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 lg:gap-6 items-start">
+      
+      <!-- ========================================== -->
+      <!-- A. MY DESK (LEFT VIEWPORT)                 -->
+      <!-- ========================================== -->
+      <section id="my-desk-card" class="glass-panel rounded-2xl p-5 relative flex flex-col gap-4 border border-white/10 shadow-2xl">
+        
+        <!-- Header: User Profile & Flow Pet / Status -->
+        <div class="flex items-center justify-between gap-3 pb-3.5 border-b border-white/10">
+          <div class="flex items-center gap-3">
+            <div id="my-avatar" class="w-9 h-9 rounded-full bg-sky-950 border-2 border-sky-400 flex items-center justify-center font-bold text-sky-400 text-sm shadow-md">
+              A
+            </div>
+            <div>
+              <div class="flex items-center gap-1.5">
+                <input 
+                  id="my-name-input" 
+                  type="text" 
+                  value="Desk A" 
+                  class="bg-transparent border-b border-transparent hover:border-white/20 focus:border-sky-400 focus:outline-none text-sm font-semibold text-white transition-colors max-w-[120px]"
+                  title="Click to rename"
+                />
+                <span class="text-[10px] font-mono uppercase text-sky-400/80 bg-sky-500/10 px-1.5 py-0.5 rounded">You</span>
+              </div>
+              <div class="flex items-center gap-1 text-[11px] text-slate-400">
+                <span id="my-tab-status-dot" class="w-1.5 h-1.5 rounded-full bg-emerald-400 ambient-dot-pulse"></span>
+                <span id="my-tab-status-text">Active on Tab</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2.5">
+            <!-- Flow Pet / Companion -->
+            <div class="flex items-center gap-2 bg-white/5 border border-white/10 px-2.5 py-1 rounded-xl">
+              <span id="my-companion-icon" class="text-lg cursor-pointer hover:scale-125 transition-transform" title="Water / Pet companion">🌱</span>
+              <div class="flex flex-col text-left">
+                <div class="flex items-center gap-1">
+                  <span id="my-companion-name" class="text-[11px] font-semibold text-white">Tiny Sprout</span>
+                  <button id="water-companion-btn" class="text-[10px] text-sky-400 hover:text-sky-300">💧</button>
+                </div>
+                <div class="w-14 h-1 bg-white/10 rounded-full overflow-hidden mt-0.5">
+                  <div id="my-companion-progress" class="h-full bg-emerald-400" style="width: 25%;"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Presence Dropdown -->
+            <div class="relative">
+              <select id="my-status-select" class="appearance-none bg-slate-900 border border-white/15 rounded-lg px-2.5 py-1.5 pr-7 text-xs font-medium text-slate-200 hover:border-white/30 focus:outline-none focus:border-sky-400 cursor-pointer transition-colors">
+                <option value="deep_focus">⚡ Deep Focus</option>
+                <option value="reviewing">📖 Reviewing</option>
+                <option value="break">☕ Break</option>
+                <option value="away">⏳ Away</option>
+              </select>
+              <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1.5 text-slate-400">
+                <i data-lucide="chevron-down" class="w-3 h-3"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Focus Goal Pill with Inline AI Scribe -->
+        <div class="relative focus-glow rounded-xl">
+          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-sky-400">
+            <i data-lucide="target" class="w-4 h-4"></i>
+          </div>
+          <input 
+            id="my-focus-input" 
+            type="text" 
+            placeholder="What are you focusing on right now? (e.g. Solving problem set 4...)"
+            class="w-full bg-slate-900/80 border border-white/10 rounded-xl pl-9 pr-24 py-2 text-xs md:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-sky-500/50 transition-all font-normal"
+          />
+          <button id="ai-breakdown-btn" class="absolute inset-y-1.5 right-1.5 px-2.5 py-1 rounded-lg bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/30 text-[11px] text-purple-300 hover:text-white font-medium flex items-center gap-1 transition-all" title="Decompose broad focus into 3-4 micro-tasks with Gemini">
+            <span>✨ AI Scribe</span>
+          </button>
+        </div>
+
+        <!-- Desk View Tabs (Tasks vs Scores) -->
+        <div class="flex items-center gap-3 border-b border-white/10 pb-1 text-xs">
+          <button id="tab-my-tasks-btn" class="desk-tab-btn active pb-1 font-semibold flex items-center gap-1.5">
+            <i data-lucide="check-square" class="w-3.5 h-3.5"></i> Micro-Tasks
+          </button>
+          <button id="tab-my-marks-btn" class="desk-tab-btn pb-1 font-semibold flex items-center gap-1.5">
+            <i data-lucide="award" class="w-3.5 h-3.5"></i> Score Tracker
+          </button>
+        </div>
+
+        <!-- Tab Panel 1: Micro-Tasks -->
+        <div id="panel-my-tasks" class="flex flex-col gap-2.5">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="text-xs uppercase tracking-wider text-slate-400 font-semibold">Micro-Tasks</span>
+              <span id="my-task-count" class="text-xs font-mono px-2 py-0.5 rounded-full bg-white/10 text-slate-300">0/0</span>
+            </div>
+            <div class="w-24 h-1.5 bg-white/10 rounded-full overflow-hidden">
+              <div id="my-progress-bar" class="h-full bg-emerald-400 transition-all duration-300" style="width: 0%;"></div>
+            </div>
+          </div>
+
+          <div class="flex gap-2">
+            <input 
+              id="my-task-input" 
+              type="text" 
+              placeholder="Add a task... (Press Enter ↵)" 
+              class="flex-1 bg-slate-900/60 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-sky-500/50 transition-all"
+            />
+            <select id="task-tag-select" class="bg-slate-900 border border-white/10 rounded-lg px-2 text-xs text-slate-300 focus:outline-none">
+              <option value="focus">🎯 Focus</option>
+              <option value="drill">✍️ Drill</option>
+              <option value="review">📚 Review</option>
+              <option value="exam">🏆 Exam</option>
+              <option value="code">💻 Code</option>
+            </select>
+            <select id="task-dots-select" class="bg-slate-900 border border-white/10 rounded-lg px-2 text-xs text-sky-400 font-mono focus:outline-none" title="Effort estimate">
+              <option value="1">• 15m</option>
+              <option value="2">•• 30m</option>
+              <option value="3">••• 45m</option>
+            </select>
+          </div>
+
+          <div id="my-task-list" class="flex flex-col gap-1.5 max-h-48 overflow-y-auto pr-1"></div>
+        </div>
+
+        <!-- Tab Panel 2: Marks & Score Tracker -->
+        <div id="panel-my-marks" class="hidden flex flex-col gap-2.5">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="text-xs uppercase tracking-wider text-slate-400 font-semibold">Test & Drill Scores</span>
+              <span id="my-marks-summary" class="text-xs font-mono px-2 py-0.5 rounded-full bg-sky-500/10 text-sky-300">0% Avg</span>
+            </div>
+            <button id="open-add-mark-btn" class="flex items-center gap-1 px-2.5 py-1 rounded bg-sky-500/20 border border-sky-500/30 text-sky-300 hover:bg-sky-500/30 text-xs font-semibold transition-all">
+              <i data-lucide="plus" class="w-3 h-3"></i> Add Score
+            </button>
+          </div>
+
+          <div class="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
+            <div id="my-marks-progress-bar" class="h-full bg-sky-400 transition-all duration-300" style="width: 0%;"></div>
+          </div>
+
+          <div id="my-marks-list" class="flex flex-col gap-1.5 max-h-48 overflow-y-auto pr-1"></div>
+        </div>
+
+      </section>
+
+      <!-- ========================================== -->
+      <!-- B. PARTNER'S DESK (RIGHT VIEWPORT)         -->
+      <!-- ========================================== -->
+      <section id="partner-desk-card" class="glass-panel rounded-2xl p-5 relative flex flex-col gap-4 border border-white/10 shadow-2xl min-h-[360px]">
+        
+        <!-- Empty State When Partner Not Joined -->
+        <div id="partner-empty-state" class="my-auto py-10 flex flex-col items-center justify-center text-center gap-2.5">
+          <div class="w-11 h-11 rounded-full bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 mb-1">
+            <i data-lucide="users" class="w-5 h-5 animate-pulse"></i>
+          </div>
+          <h3 class="text-sm font-semibold text-slate-200">Waiting for study partner...</h3>
+          <p class="text-xs text-slate-400 max-w-xs leading-relaxed">
+            Share your invite link so your study partner can co-work with you in real time.
+          </p>
+          <button onclick="document.getElementById('copy-invite-btn').click()" class="mt-1 flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-purple-500/20 border border-purple-500/40 text-purple-300 hover:bg-purple-500/30 text-xs font-semibold transition-all">
+            <i data-lucide="link" class="w-3.5 h-3.5"></i>
+            Copy Room Invite Link
+          </button>
+        </div>
+
+        <!-- Active Partner Content -->
+        <div id="partner-content" class="hidden flex flex-col gap-4">
+          <div class="flex items-center justify-between gap-3 pb-3.5 border-b border-white/10">
+            <div class="flex items-center gap-3">
+              <div id="partner-avatar" class="w-9 h-9 rounded-full bg-purple-950 border-2 border-purple-400 flex items-center justify-center font-bold text-purple-400 text-sm shadow-md">
+                B
+              </div>
+              <div>
+                <div class="flex items-center gap-1.5">
+                  <span id="partner-name" class="text-sm font-semibold text-white">Desk B</span>
+                  <span class="text-[10px] font-mono uppercase text-purple-400/80 bg-purple-500/10 px-1.5 py-0.5 rounded">Partner</span>
+                </div>
+                <div class="flex items-center gap-1 text-[11px] text-slate-400">
+                  <span id="partner-tab-status-dot" class="w-1.5 h-1.5 rounded-full bg-emerald-400 ambient-dot-pulse"></span>
+                  <span id="partner-tab-status-text">Active on Tab</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <div class="flex items-center gap-1.5 bg-white/5 border border-white/10 px-2.5 py-1 rounded-xl">
+                <span id="partner-companion-icon" class="text-base">🌱</span>
+                <span id="partner-companion-name" class="text-[11px] font-semibold text-white">Tiny Sprout</span>
+              </div>
+              <div id="partner-status-badge" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border bg-sky-500/10 text-sky-400 border-sky-500/30">
+                <span class="w-1.5 h-1.5 rounded-full bg-sky-400"></span>
+                <span>Deep Focus</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Partner Live Flashcard HUD (if active) -->
+          <div id="partner-flashcard-hud" class="hidden px-3 py-1.5 rounded-lg bg-purple-500/10 border border-purple-500/30 text-xs text-purple-300 font-mono">
+            🃏 Partner studying flashcards...
+          </div>
+
+          <!-- Partner Focus Pill Badge -->
+          <div class="bg-slate-900/80 border border-white/10 rounded-xl px-3.5 py-2 text-xs md:text-sm text-sky-300 font-medium flex items-center gap-2.5">
+            <i data-lucide="sparkles" class="w-4 h-4 text-purple-400 shrink-0"></i>
+            <span id="partner-focus-text" class="truncate">Working on problem set...</span>
+          </div>
+
+          <!-- Partner Tabs Switcher -->
+          <div class="flex items-center gap-3 border-b border-white/10 pb-1 text-xs">
+            <button id="tab-partner-tasks-btn" class="desk-tab-btn active pb-1 font-semibold flex items-center gap-1.5">
+              <i data-lucide="check-square" class="w-3.5 h-3.5"></i> Tasks
+            </button>
+            <button id="tab-partner-marks-btn" class="desk-tab-btn pb-1 font-semibold flex items-center gap-1.5">
+              <i data-lucide="award" class="w-3.5 h-3.5"></i> Scores
+            </button>
+          </div>
+
+          <div id="panel-partner-tasks" class="flex flex-col gap-2.5">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="text-xs uppercase tracking-wider text-slate-400 font-semibold">Partner's Tasks</span>
+                <span id="partner-task-count" class="text-xs font-mono px-2 py-0.5 rounded-full bg-white/10 text-slate-300">0/0</span>
+              </div>
+              <div class="w-24 h-1.5 bg-white/10 rounded-full overflow-hidden">
+                <div id="partner-progress-bar" class="h-full bg-emerald-400 transition-all duration-300" style="width: 0%;"></div>
+              </div>
+            </div>
+
+            <div id="partner-task-list" class="flex flex-col gap-1.5 max-h-48 overflow-y-auto pr-1"></div>
+          </div>
+
+          <div id="panel-partner-marks" class="hidden flex flex-col gap-2.5">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="text-xs uppercase tracking-wider text-slate-400 font-semibold">Partner's Scores</span>
+                <span id="partner-marks-summary" class="text-xs font-mono px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-300">0% Avg</span>
+              </div>
+            </div>
+
+            <div class="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
+              <div id="partner-marks-progress-bar" class="h-full bg-purple-400 transition-all duration-300" style="width: 0%;"></div>
+            </div>
+
+            <div id="partner-marks-list" class="flex flex-col gap-1.5 max-h-48 overflow-y-auto pr-1"></div>
+          </div>
+
+        </div>
+
+      </section>
+
+    </div>
+  </main>
+
+  <!-- ========================================================================= -->
+  <!-- 3. BOTTOM BAR: METRICS, NUDGES & SHORTCUTS                                -->
+  <!-- ========================================================================= -->
+  <footer class="w-full border-t border-white/5 bg-slate-950/80 backdrop-blur-xl sticky bottom-0 z-40 px-4 lg:px-8 py-2.5">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+      
+      <!-- Daily Metrics & Streaks -->
+      <div class="flex items-center gap-4 text-xs text-slate-400 order-2 sm:order-1">
+        <div class="flex items-center gap-1.5">
+          <span class="text-amber-400">🔥</span>
+          <span>Streak: <strong id="metric-streak-count" class="text-white font-mono">1d</strong></span>
+        </div>
+        <div class="h-3 w-px bg-white/10"></div>
+        <div class="flex items-center gap-1.5">
+          <span class="text-emerald-400">✓</span>
+          <span>Completed: <strong id="metric-tasks-count" class="text-white font-mono">0</strong></span>
+        </div>
+        <div class="h-3 w-px bg-white/10"></div>
+        <div class="flex items-center gap-1.5">
+          <span class="text-sky-400">⏱</span>
+          <span>Focus Time: <strong id="metric-focus-mins" class="text-white font-mono">0m</strong></span>
+        </div>
+
+        <div class="h-3 w-px bg-white/10 hidden md:block"></div>
+
+        <button id="export-session-btn" title="Export session & notes to Markdown" class="hidden md:flex items-center gap-1 px-2 py-0.5 rounded bg-white/5 hover:bg-white/10 border border-white/10 text-[11px] text-slate-300 hover:text-white transition-all">
+          <i data-lucide="download" class="w-3 h-3"></i> Export
+        </button>
+      </div>
+
+      <!-- Micro-Reaction / Nudge Dock -->
+      <div id="nudge-dock" class="flex items-center gap-1.5 order-1 sm:order-2">
+        <span class="text-xs text-slate-500 font-medium hidden md:inline mr-1">Nudges:</span>
+        <button data-nudge="fistbump" title="Send Fist Bump 👊" class="relative group p-1.5 rounded-xl bg-white/5 border border-white/10 hover:border-sky-500/40 hover:bg-sky-500/10 text-base transition-all active:scale-90">👊</button>
+        <button data-nudge="coffee" title="Coffee Ping ☕" class="relative group p-1.5 rounded-xl bg-white/5 border border-white/10 hover:border-amber-500/40 hover:bg-amber-500/10 text-base transition-all active:scale-90">☕</button>
+        <button data-nudge="sparkle" title="Send Sparkle ✨" class="relative group p-1.5 rounded-xl bg-white/5 border border-white/10 hover:border-purple-500/40 hover:bg-purple-500/10 text-base transition-all active:scale-90">✨</button>
+        <button data-nudge="bolt" title="Keep Going ⚡" class="relative group p-1.5 rounded-xl bg-white/5 border border-white/10 hover:border-yellow-500/40 hover:bg-yellow-500/10 text-base transition-all active:scale-90">⚡</button>
+        <button data-nudge="water" title="Hydrate Reminder 💧" class="relative group p-1.5 rounded-xl bg-white/5 border border-white/10 hover:border-blue-500/40 hover:bg-blue-500/10 text-base transition-all active:scale-90">💧</button>
+        <button data-nudge="celebrate" title="Celebrate 🎉" class="relative group p-1.5 rounded-xl bg-white/5 border border-white/10 hover:border-rose-500/40 hover:bg-rose-500/10 text-base transition-all active:scale-90">🎉</button>
+      </div>
+
+      <!-- Quick Shortcuts Guide -->
+      <div class="hidden lg:flex items-center gap-2.5 text-[11px] text-slate-500 font-mono order-3">
+        <span><kbd class="bg-white/10 px-1.5 py-0.5 rounded text-slate-300">Space</kbd> Timer</span>
+        <span><kbd class="bg-white/10 px-1.5 py-0.5 rounded text-slate-300">F</kbd> Zen</span>
+        <span><kbd class="bg-white/10 px-1.5 py-0.5 rounded text-slate-300">⌘K</kbd> Focus</span>
+        <span><kbd class="bg-white/10 px-1.5 py-0.5 rounded text-slate-300">⌘J</kbd> Notes</span>
+      </div>
+
+    </div>
+  </footer>
+
+  <!-- ========================================================================= -->
+  <!-- 4. SLIDE-OUT DRAWER: DUAL SHARED & PERSONAL SCRATCHPAD WITH FORMULAS       -->
+  <!-- ========================================================================= -->
+  <aside id="scratchpad-drawer" class="fixed inset-y-0 right-0 z-50 w-full max-w-lg bg-slate-900/95 backdrop-blur-2xl border-l border-white/10 shadow-2xl transform translate-x-full transition-transform duration-300 ease-in-out flex flex-col">
+    <!-- Header with Dual Tabs and Socratic Hint Button -->
+    <div class="flex items-center justify-between px-5 py-3 border-b border-white/10 bg-slate-950/40">
+      <div class="flex items-center gap-2">
+        <button id="tab-shared-scratchpad" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-sky-500/20 text-sky-300 border border-sky-500/30">
+          🌐 Shared Notes
+        </button>
+        <button id="tab-personal-scratchpad" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white border border-transparent">
+          🔒 Private Notes
+        </button>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button id="ai-socratic-btn" class="flex items-center gap-1 px-2.5 py-1 rounded bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/30 text-xs text-purple-300 hover:text-white transition-all" title="Ask Gemini Socratic Tutor for a subtle hint">
+          <span>✨ Socratic Hint</span>
+        </button>
+        <button id="scratchpad-preview-toggle" class="flex items-center gap-1 px-2.5 py-1 rounded bg-white/5 hover:bg-white/10 border border-white/10 text-xs text-slate-300 hover:text-white transition-all">
+          <i data-lucide="eye" class="w-3.5 h-3.5"></i> Preview
+        </button>
+        <button id="close-scratchpad-btn" class="p-1 rounded text-slate-400 hover:text-white hover:bg-white/10 transition-colors">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Quick Formula Insert Toolbar -->
+    <div class="flex items-center gap-1 px-5 py-1.5 border-b border-white/5 bg-black/20 overflow-x-auto text-[11px] font-mono whitespace-nowrap">
+      <span class="text-slate-500 mr-1">Insert:</span>
+      <button data-formula="integral" class="px-2 py-0.5 rounded bg-white/5 hover:bg-white/10 text-sky-300" title="Definite Integral">∫ f(x)dx</button>
+      <button data-formula="derivative" class="px-2 py-0.5 rounded bg-white/5 hover:bg-white/10 text-sky-300" title="Derivative">d/dx</button>
+      <button data-formula="matrix" class="px-2 py-0.5 rounded bg-white/5 hover:bg-white/10 text-sky-300" title="Matrix">[Matrix]</button>
+      <button data-formula="sum" class="px-2 py-0.5 rounded bg-white/5 hover:bg-white/10 text-sky-300" title="Summation">∑</button>
+      <button data-formula="chem_reaction" class="px-2 py-0.5 rounded bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300" title="Reaction">A ➔ B</button>
+      <button data-formula="physics" class="px-2 py-0.5 rounded bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300" title="Physics Law">∇×E</button>
+      <button data-formula="vocab_entry" class="px-2 py-0.5 rounded bg-purple-500/10 hover:bg-purple-500/20 text-purple-300" title="Definition Template">Vocab Entry</button>
+      <button data-formula="accents" class="px-2 py-0.5 rounded bg-purple-500/10 hover:bg-purple-500/20 text-purple-300" title="Accent Diacritics">é à ñ ü</button>
+    </div>
+
+    <!-- Live Typing Indicator -->
+    <div id="scratchpad-typing-indicator" class="opacity-0 transition-opacity px-5 py-1 text-[11px] text-sky-400 bg-sky-500/10 flex items-center gap-1.5">
+      <span class="w-1.5 h-1.5 rounded-full bg-sky-400 animate-ping"></span>
+      <span>Partner is typing in shared scratchpad...</span>
+    </div>
+
+    <!-- Scratchpad Viewport -->
+    <div class="flex-1 p-5 overflow-y-auto flex flex-col">
+      <textarea 
+        id="scratchpad-textarea" 
+        placeholder="Type formulas, notes, vocabulary, or LaTeX ($...$ and $$...$$) here..."
+        class="w-full h-full bg-transparent text-sm text-slate-100 placeholder-slate-500 focus:outline-none resize-none font-mono leading-relaxed"
+      ></textarea>
+      
+      <div id="scratchpad-preview" class="hidden w-full h-full text-sm text-slate-100 overflow-y-auto"></div>
+    </div>
+
+    <div class="px-5 py-3 border-t border-white/10 bg-black/20 text-[11px] text-slate-500 flex items-center justify-between">
+      <span>KaTeX LaTeX Math & Markdown enabled</span>
+      <span class="font-mono">Live WebSocket Sync</span>
+    </div>
+  </aside>
+
+  <!-- ========================================================================= -->
+  <!-- 5. SOUNDSCAPE & BINAURAL BEATS MIXER                                      -->
+  <!-- ========================================================================= -->
+  <div id="soundscape-modal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-white/10 rounded-2xl p-6 max-w-sm w-full shadow-2xl flex flex-col gap-5">
+      <div class="flex items-center justify-between pb-3 border-b border-white/10">
+        <h3 class="text-sm font-semibold text-white flex items-center gap-2">
+          <i data-lucide="headphones" class="w-4 h-4 text-emerald-400"></i>
+          Procedural Soundscapes & Beats
+        </h3>
+        <button id="close-soundscape-modal" class="text-slate-400 hover:text-white">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <div class="flex flex-col gap-4 text-xs">
+        <div class="flex flex-col gap-1.5">
+          <div class="flex justify-between text-slate-300">
+            <span class="font-medium">🌊 Brown Noise (Deep Calm)</span>
+            <span id="brown-val-text" class="font-mono text-slate-400">0%</span>
+          </div>
+          <input id="slider-brown-noise" type="range" min="0" max="1" step="0.05" value="0" class="w-full accent-emerald-400 cursor-pointer">
+        </div>
+
+        <div class="flex flex-col gap-1.5">
+          <div class="flex justify-between text-slate-300">
+            <span class="font-medium">🌧️ Soft Rain</span>
+            <span id="rain-val-text" class="font-mono text-slate-400">0%</span>
+          </div>
+          <input id="slider-rain-noise" type="range" min="0" max="1" step="0.05" value="0" class="w-full accent-emerald-400 cursor-pointer">
+        </div>
+
+        <div class="flex flex-col gap-1.5">
+          <div class="flex justify-between text-slate-300">
+            <span class="font-medium">📻 Vinyl Crackle (Lo-Fi)</span>
+            <span id="vinyl-val-text" class="font-mono text-slate-400">0%</span>
+          </div>
+          <input id="slider-vinyl-noise" type="range" min="0" max="1" step="0.05" value="0" class="w-full accent-emerald-400 cursor-pointer">
+        </div>
+
+        <div class="flex flex-col gap-2 pt-2 border-t border-white/10">
+          <div class="flex justify-between text-slate-300">
+            <span class="font-medium">🧠 Stereo Binaural Beats</span>
+            <span id="binaural-val-text" class="font-mono text-slate-400">0%</span>
+          </div>
+          <input id="slider-binaural" type="range" min="0" max="1" step="0.05" value="0" class="w-full accent-purple-400 cursor-pointer">
+          <div class="flex gap-1.5">
+            <button data-binaural="gamma" class="flex-1 py-1 rounded bg-white/10 text-[10px] font-mono text-white hover:bg-white/20 active:bg-purple-500/30">40Hz γ</button>
+            <button data-binaural="beta" class="flex-1 py-1 rounded bg-white/5 text-[10px] font-mono text-slate-300 hover:bg-white/20">20Hz β</button>
+            <button data-binaural="alpha" class="flex-1 py-1 rounded bg-white/5 text-[10px] font-mono text-slate-300 hover:bg-white/20">10Hz α</button>
+            <button data-binaural="theta" class="flex-1 py-1 rounded bg-white/5 text-[10px] font-mono text-slate-300 hover:bg-white/20">6Hz θ</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- 6. DUO FLASHCARDS DRILL MODAL                                             -->
+  <!-- ========================================================================= -->
+  <div id="flashcards-modal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-white/10 rounded-2xl p-6 max-w-lg w-full shadow-2xl flex flex-col gap-4">
+      <div class="flex items-center justify-between pb-3 border-b border-white/10">
+        <div class="flex items-center gap-2">
+          <i data-lucide="layers" class="w-4 h-4 text-purple-400"></i>
+          <select id="flashcard-deck-select" class="bg-slate-800 border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white focus:outline-none max-w-[220px]"></select>
+        </div>
+        <div class="flex items-center gap-2">
+          <button id="ai-gen-deck-btn" class="flex items-center gap-1 px-2.5 py-1 rounded bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/30 text-xs text-purple-300 font-medium">
+            <span>✨ AI Gen Deck</span>
+          </button>
+          <button id="close-flashcards-modal" class="text-slate-400 hover:text-white">
+            <i data-lucide="x" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between text-xs text-slate-400">
+        <span id="flashcard-progress-text">Card 1 of 5</span>
+        <span class="text-[10px] text-slate-500 font-mono">Space to Flip • 1 Review • 2 Got it</span>
+      </div>
+      <div class="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
+        <div id="flashcard-progress-bar" class="h-full bg-purple-400 transition-all duration-300" style="width: 20%;"></div>
+      </div>
+
+      <div class="flashcard-container my-2">
+        <div id="flashcard-card" class="flashcard-inner">
+          <div class="flashcard-front bg-slate-800/90 border border-white/10 shadow-lg text-white">
+            <span class="text-[11px] uppercase tracking-widest text-slate-400 font-semibold mb-2">Question / Concept / Term</span>
+            <div id="flashcard-front-content" class="text-base font-semibold leading-relaxed"></div>
+          </div>
+          <div class="flashcard-back bg-slate-950 border border-purple-500/30 shadow-lg text-purple-200">
+            <span class="text-[11px] uppercase tracking-widest text-purple-400 font-semibold mb-2">Answer / Formula / Definition</span>
+            <div id="flashcard-back-content" class="text-base font-medium leading-relaxed"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-3 gap-3">
+        <button id="flashcard-review-btn" class="py-2 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 hover:bg-rose-500/20 text-xs font-semibold">
+          [1] Review Again
+        </button>
+        <button id="flashcard-flip-btn" class="py-2 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-semibold text-white">
+          [Space] Flip Card
+        </button>
+        <button id="flashcard-correct-btn" class="py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/20 text-xs font-semibold">
+          [2] Mastered ✓
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- 7. EXAM COUNTDOWN & TRAJECTORY MODAL                                      -->
+  <!-- ========================================================================= -->
+  <div id="exam-modal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-white/10 rounded-2xl p-6 max-w-md w-full shadow-2xl flex flex-col gap-4">
+      <div class="flex items-center justify-between pb-3 border-b border-white/10">
+        <h3 class="text-sm font-semibold text-white flex items-center gap-2">
+          <i data-lucide="calendar" class="w-4 h-4 text-amber-400"></i>
+          Exam Target & Trajectory
+        </h3>
+        <button id="close-exam-modal" class="text-slate-400 hover:text-white">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <div class="bg-black/30 p-4 rounded-xl border border-white/10 flex flex-col gap-3">
+        <div class="flex items-center justify-between">
+          <div>
+            <h4 id="exam-title-display" class="font-bold text-white text-sm">Target Exam</h4>
+            <span id="exam-target-score-display" class="text-xs text-amber-400 font-mono">Target: 90%</span>
+          </div>
+          <span id="exam-countdown-text" class="font-mono text-sm px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 font-semibold">14d left</span>
+        </div>
+
+        <svg id="exam-sparkline-svg" class="w-full h-12 bg-slate-950/60 rounded-lg border border-white/5"></svg>
+      </div>
+
+      <form id="exam-target-form" class="flex flex-col gap-3 text-xs">
+        <div class="flex flex-col gap-1">
+          <label class="text-slate-400 font-medium">Exam Name</label>
+          <input id="exam-title-input" required type="text" class="bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-white focus:outline-none">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div class="flex flex-col gap-1">
+            <label class="text-slate-400 font-medium">Exam Date</label>
+            <input id="exam-date-input" required type="date" class="bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-white focus:outline-none">
+          </div>
+          <div class="flex flex-col gap-1">
+            <label class="text-slate-400 font-medium">Target Score (%)</label>
+            <input id="exam-target-score-input" required type="number" min="1" max="100" class="bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-white font-mono focus:outline-none">
+          </div>
+        </div>
+        <button type="submit" class="mt-1 w-full py-2 rounded-lg bg-amber-500 text-slate-950 font-bold hover:bg-amber-400 transition-colors">
+          Update Exam Target
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- 8. 30-DAY ACTIVITY HEATMAP MODAL                                          -->
+  <!-- ========================================================================= -->
+  <div id="heatmap-modal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-white/10 rounded-2xl p-6 max-w-md w-full shadow-2xl flex flex-col gap-4">
+      <div class="flex items-center justify-between pb-3 border-b border-white/10">
+        <h3 class="text-sm font-semibold text-white flex items-center gap-2">
+          <i data-lucide="activity" class="w-4 h-4 text-emerald-400"></i>
+          30-Day Study Consistency
+        </h3>
+        <button id="close-heatmap-modal" class="text-slate-400 hover:text-white">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <div class="flex items-center justify-between text-xs text-slate-400">
+        <span>Daily Focus Distribution</span>
+        <span id="heatmap-total-mins" class="font-mono text-emerald-400 font-semibold">120 mins</span>
+      </div>
+
+      <div id="heatmap-grid" class="grid grid-cols-6 sm:grid-cols-10 gap-1.5 p-4 bg-black/30 rounded-xl border border-white/10 justify-items-center"></div>
+
+      <div class="flex flex-col gap-2 pt-2 border-t border-white/10">
+        <span class="text-xs text-slate-400 font-medium">Activity Breakdown</span>
+        <div id="heatmap-subject-breakdown" class="flex flex-col gap-1"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- 9. SETTINGS MODAL (AUDIO, THEMES & GEMINI KEY)                            -->
+  <!-- ========================================================================= -->
+  <div id="audio-modal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-white/10 rounded-2xl p-6 max-w-sm w-full shadow-2xl flex flex-col gap-4">
+      <div class="flex items-center justify-between pb-3 border-b border-white/10">
+        <h3 class="text-sm font-semibold text-white flex items-center gap-2">
+          <i data-lucide="settings" class="w-4 h-4 text-sky-400"></i>
+          Audio, Themes & AI Settings
+        </h3>
+        <button id="close-audio-modal" class="text-slate-400 hover:text-white">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <div class="flex flex-col gap-4 text-xs">
+        <div class="flex flex-col gap-1.5">
+          <label class="text-slate-400 font-medium">Session Bell Palette</label>
+          <select id="sound-palette-select" class="bg-slate-800 border border-white/10 rounded-lg px-3 py-1.5 text-white focus:outline-none">
+            <option value="tibetan">🥣 Tibetan Singing Bowl (Healing 432Hz)</option>
+            <option value="gong">🔔 Zen Temple Gong</option>
+            <option value="rhodes">🎹 Lo-Fi Rhodes Piano Chord</option>
+            <option value="marimba">🪵 Wooden Marimba Arpeggio</option>
+          </select>
+        </div>
+
+        <div class="flex flex-col gap-1.5">
+          <label class="text-slate-400 font-medium">Chime Volume</label>
+          <input id="audio-volume-slider" type="range" min="0" max="1" step="0.05" class="w-full accent-sky-400 cursor-pointer">
+        </div>
+
+        <div class="flex items-center justify-between">
+          <label for="audio-mute-checkbox" class="text-slate-300 font-medium cursor-pointer">Mute all chimes</label>
+          <input id="audio-mute-checkbox" type="checkbox" class="task-checkbox">
+        </div>
+
+        <!-- Ambient Color Themes -->
+        <div class="flex flex-col gap-2 pt-2 border-t border-white/10">
+          <label class="text-slate-400 font-medium flex items-center justify-between">
+            <span>🎨 Ambient Color Theme</span>
+            <span id="current-theme-name" class="text-[10px] text-sky-400 font-mono">Midnight</span>
+          </label>
+          <div class="grid grid-cols-3 gap-2">
+            <button data-theme-btn="nextjs" class="theme-select-btn flex items-center gap-1.5 p-2 rounded-lg bg-slate-800/80 border border-sky-500/40 hover:bg-slate-700/80 text-left transition-all">
+              <span class="w-3 h-3 rounded-full bg-white border border-white/20"></span>
+              <span class="text-[10px] font-medium text-slate-200">Next.js Dark</span>
+            </button>
+            <button data-theme-btn="sakura" class="theme-select-btn flex items-center gap-1.5 p-2 rounded-lg bg-slate-800/80 border border-white/10 hover:border-pink-500/40 text-left transition-all">
+              <span class="w-3 h-3 rounded-full bg-pink-400 border border-white/20"></span>
+              <span class="text-[10px] font-medium text-slate-200">Bubble Pink</span>
+            </button>
+            <button data-theme-btn="matrix" class="theme-select-btn flex items-center gap-1.5 p-2 rounded-lg bg-slate-800/80 border border-white/10 hover:border-emerald-500/40 text-left transition-all">
+              <span class="w-3 h-3 rounded-full bg-emerald-400 border border-white/20"></span>
+              <span class="text-[10px] font-medium text-slate-200">Cyber Matrix</span>
+            </button>
+            <button data-theme-btn="coffee" class="theme-select-btn flex items-center gap-1.5 p-2 rounded-lg bg-slate-800/80 border border-white/10 hover:border-amber-500/40 text-left transition-all">
+              <span class="w-3 h-3 rounded-full bg-amber-400 border border-white/20"></span>
+              <span class="text-[10px] font-medium text-slate-200">Lo-Fi Cafe</span>
+            </button>
+            <button data-theme-btn="aurora" class="theme-select-btn flex items-center gap-1.5 p-2 rounded-lg bg-slate-800/80 border border-white/10 hover:border-indigo-500/40 text-left transition-all">
+              <span class="w-3 h-3 rounded-full bg-indigo-400 border border-white/20"></span>
+              <span class="text-[10px] font-medium text-slate-200">Aurora Glass</span>
+            </button>
+            <button data-theme-btn="matcha" class="theme-select-btn flex items-center gap-1.5 p-2 rounded-lg bg-slate-800/80 border border-white/10 hover:border-lime-500/40 text-left transition-all">
+              <span class="w-3 h-3 rounded-full bg-lime-400 border border-white/20"></span>
+              <span class="text-[10px] font-medium text-slate-200">Zen Matcha</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Gemini API Key Input -->
+        <div class="flex flex-col gap-1.5 pt-2 border-t border-white/10">
+          <label class="text-slate-400 font-medium flex items-center gap-1">
+            <span>✨ Gemini API Key</span>
+            <span class="text-[10px] text-slate-500 font-normal">(optional)</span>
+          </label>
+          <input id="gemini-key-input" type="password" placeholder="AIzaSy..." class="bg-slate-800 border border-white/10 rounded-lg px-3 py-1.5 text-white font-mono focus:outline-none">
+          <span class="text-[10px] text-slate-500">Enables Gemini AI Task Scribe, Flashcard generator, and Socratic hints.</span>
+        </div>
+
+        <button id="test-chime-btn" class="w-full py-2 rounded-lg bg-sky-500/10 border border-sky-500/30 text-sky-400 hover:bg-sky-500/20 font-semibold transition-all">
+          Test Session Bell
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- 10. ADD TEST SCORE MODAL                                                  -->
+  <!-- ========================================================================= -->
+  <div id="add-mark-modal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-white/10 rounded-2xl p-6 max-w-sm w-full shadow-2xl flex flex-col gap-4">
+      <div class="flex items-center justify-between pb-3 border-b border-white/10">
+        <h3 class="text-sm font-semibold text-white flex items-center gap-2">
+          <i data-lucide="award" class="w-4 h-4 text-sky-400"></i>
+          Record Test / Drill Marks
+        </h3>
+        <button id="close-add-mark-modal" class="text-slate-400 hover:text-white">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <form id="add-mark-form" class="flex flex-col gap-3 text-xs">
+        <div class="flex flex-col gap-1">
+          <label class="text-slate-400 font-medium">Test / Problem Set Title</label>
+          <input id="mark-title-input" required type="text" placeholder="e.g. Mock Test 1 / Practice Quiz" class="bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-sky-500">
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <label class="text-slate-400 font-medium">Category / Subject</label>
+          <select id="mark-subject-select" class="bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-white focus:outline-none">
+            <option value="math">📐 Mathematics</option>
+            <option value="science">🔬 Science</option>
+            <option value="humanities">🏛️ Humanities</option>
+            <option value="language">📖 Language</option>
+            <option value="general">🎯 General</option>
+          </select>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div class="flex flex-col gap-1">
+            <label class="text-slate-400 font-medium">Marks Scored</label>
+            <input id="mark-scored-input" required type="number" step="0.5" placeholder="42" class="bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-white font-mono focus:outline-none focus:border-sky-500">
+          </div>
+          <div class="flex flex-col gap-1">
+            <label class="text-slate-400 font-medium">Total Marks</label>
+            <input id="mark-total-input" required type="number" step="0.5" placeholder="50" class="bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-white font-mono focus:outline-none focus:border-sky-500">
+          </div>
+        </div>
+
+        <button type="submit" class="mt-2 w-full py-2.5 rounded-lg bg-sky-500 text-slate-950 font-bold hover:bg-sky-400 transition-colors">
+          Save & Sync Score
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- 11. END-OF-BLOCK DEBRIEF MODAL                                            -->
+  <!-- ========================================================================= -->
+  <div id="debrief-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-sky-500/30 rounded-2xl p-6 max-w-md w-full shadow-2xl flex flex-col gap-5 text-center">
+      <div class="flex flex-col items-center gap-1">
+        <span class="text-3xl">🔔</span>
+        <h3 class="text-lg font-bold text-white">Focus Block Finished!</h3>
+        <p class="text-xs text-slate-400">Take a 30-second micro-debrief before break time.</p>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3 text-left bg-black/30 p-3.5 rounded-xl border border-white/10">
+        <div>
+          <span class="text-[11px] uppercase tracking-wider text-sky-400 font-semibold block mb-1">Your Completed:</span>
+          <ul id="debrief-my-tasks" class="space-y-1"></ul>
+        </div>
+        <div>
+          <span class="text-[11px] uppercase tracking-wider text-purple-400 font-semibold block mb-1">Partner's Completed:</span>
+          <ul id="debrief-partner-tasks" class="space-y-1"></ul>
+        </div>
+      </div>
+
+      <button id="debrief-high-five-btn" class="w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 font-extrabold text-sm hover:from-amber-400 hover:to-yellow-400 transition-all active:scale-95 shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2">
+        <span class="text-lg">✋</span> High Five Partner!
+      </button>
+
+      <div class="flex items-center justify-between text-xs text-slate-400 border-t border-white/10 pt-3">
+        <span>Break begins in: <strong id="debrief-countdown" class="font-mono text-white">30s</strong></span>
+        <button id="debrief-skip-btn" class="text-sky-400 hover:text-sky-300 font-semibold">Start Break Now →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- 12. ZEN FULLSCREEN FLOW MODE OVERLAY                                      -->
+  <!-- ========================================================================= -->
+  <div id="zen-overlay" class="hidden fixed inset-0 z-50 bg-slate-950 flex flex-col justify-between p-8 text-center select-none">
+    <div class="flex items-center justify-between max-w-4xl mx-auto w-full text-xs text-slate-500">
+      <div class="flex items-center gap-2">
+        <span id="zen-presence-dot" class="w-2.5 h-2.5 rounded-full bg-emerald-400 ambient-dot-pulse"></span>
+        <span>Co-working in Zen</span>
+      </div>
+      <button id="zen-exit-btn" class="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-slate-400 hover:text-white transition-colors">
+        Exit Zen (Esc / F)
+      </button>
+    </div>
+
+    <div class="flex flex-col items-center justify-center gap-6">
+      <div id="zen-timer-digits" class="font-mono-timer text-7xl md:text-9xl font-extrabold tracking-tight text-white drop-shadow-[0_0_35px_rgba(56,189,248,0.25)]">
+        25:00
+      </div>
+
+      <div class="flex flex-col md:flex-row items-center gap-3">
+        <div class="px-4 py-2 rounded-full bg-sky-500/10 border border-sky-500/30 text-sky-300 text-sm font-medium">
+          🎯 <span id="zen-my-focus">Reviewing session notes</span>
+        </div>
+        <div class="px-4 py-2 rounded-full bg-purple-500/10 border border-purple-500/30 text-purple-300 text-sm font-medium">
+          ✨ <span id="zen-partner-focus">Partner in session</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="text-[11px] text-slate-600 font-mono">
+      Space to Pause/Start • Press F to Return
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- 13. SOCRATIC HINT MODAL                                                   -->
+  <!-- ========================================================================= -->
+  <div id="ai-hint-modal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-purple-500/30 rounded-2xl p-6 max-w-sm w-full shadow-2xl flex flex-col gap-4 text-center">
+      <div class="flex flex-col items-center gap-1">
+        <span class="text-3xl">💡</span>
+        <h3 class="text-sm font-bold text-white">Socratic Study Hint</h3>
+      </div>
+      <div id="ai-hint-content" class="bg-black/30 p-3.5 rounded-xl border border-white/10 text-xs text-left"></div>
+      <button onclick="document.getElementById('ai-hint-modal').classList.add('hidden')" class="w-full py-2 rounded-lg bg-purple-500/20 border border-purple-500/40 text-purple-300 font-semibold text-xs hover:bg-purple-500/30">
+        Got it, thanks!
+      </button>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- 14. USER AUTHENTICATION MODAL (LOGIN / REGISTER)                          -->
+  <!-- ========================================================================= -->
+  <div id="auth-modal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-white/10 rounded-2xl p-6 max-w-sm w-full shadow-2xl flex flex-col gap-4">
+      <div class="flex items-center justify-between pb-3 border-b border-white/10">
+        <h3 id="auth-modal-title" class="text-sm font-bold text-white flex items-center gap-2">
+          <i data-lucide="user" class="w-4 h-4 text-sky-400"></i>
+          Log In to Ambients
+        </h3>
+        <button id="close-auth-modal" class="text-slate-400 hover:text-white">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <form id="auth-form" class="flex flex-col gap-3 text-xs">
+        <div id="auth-name-group" class="hidden flex flex-col gap-1">
+          <label class="text-slate-400 font-medium">Display Name</label>
+          <input id="auth-name-input" type="text" placeholder="e.g. Alex" class="bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-sky-500">
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <label class="text-slate-400 font-medium">Username</label>
+          <input id="auth-username-input" required type="text" placeholder="e.g. alex99" class="bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-sky-500">
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <label class="text-slate-400 font-medium">Password</label>
+          <input id="auth-password-input" required type="password" placeholder="••••••••" class="bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-sky-500">
+        </div>
+
+        <button id="auth-submit-btn" type="submit" class="mt-2 w-full py-2.5 rounded-lg bg-sky-500 text-slate-950 font-bold hover:bg-sky-400 transition-colors">
+          Log In
+        </button>
+      </form>
+
+      <div class="text-center border-t border-white/10 pt-3 text-xs text-slate-400">
+        <span id="auth-toggle-mode-text">Don't have an account?</span>
+        <button id="auth-toggle-mode-btn" class="text-sky-400 hover:text-sky-300 font-semibold ml-1">Create Account</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- 15. SLIDE-OUT DRAWER: GEMINI AI FOCUS OVERSEER & AGENTIC CHATBAR          -->
+  <!-- ========================================================================= -->
+  <aside id="overseer-drawer" class="fixed inset-y-0 right-0 z-50 w-full max-w-md bg-slate-900/95 backdrop-blur-2xl border-l border-purple-500/30 shadow-2xl transform translate-x-full transition-transform duration-300 ease-in-out flex flex-col">
+    <!-- Header -->
+    <div class="flex items-center justify-between px-5 py-3.5 border-b border-white/10 bg-slate-950/60">
+      <div class="flex items-center gap-2.5">
+        <div class="w-7 h-7 rounded-lg bg-purple-500/20 border border-purple-500/40 flex items-center justify-center text-purple-400">
+          <i data-lucide="bot" class="w-4 h-4"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-1.5">
+            <h3 class="text-xs font-bold text-white">Gemini AI Overseer</h3>
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 ambient-dot-pulse"></span>
+          </div>
+          <p class="text-[10px] text-slate-400">Desk Copilot & Task Controller</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <span class="text-[10px] text-slate-500 font-mono hidden sm:inline">⌘/</span>
+        <button id="close-overseer-btn" class="p-1 rounded text-slate-400 hover:text-white hover:bg-white/10 transition-colors">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Quick Action Chips -->
+    <div class="flex items-center gap-1.5 px-4 py-2 border-b border-white/5 bg-black/20 overflow-x-auto text-[11px] whitespace-nowrap">
+      <button onclick="document.getElementById('overseer-input').value='Decompose my physics goals into 3 actionable tasks'; document.getElementById('overseer-form').dispatchEvent(new Event('submit'))" class="px-2.5 py-1 rounded-full bg-white/5 hover:bg-purple-500/20 hover:border-purple-500/40 border border-white/10 text-slate-300 hover:text-purple-200 transition-all">✨ Add 3 tasks</button>
+      <button onclick="document.getElementById('overseer-input').value='Start a 25m Pomodoro with soft rain soundscape'; document.getElementById('overseer-form').dispatchEvent(new Event('submit'))" class="px-2.5 py-1 rounded-full bg-white/5 hover:bg-purple-500/20 hover:border-purple-500/40 border border-white/10 text-slate-300 hover:text-purple-200 transition-all">⏱️ 25m Focus + Rain</button>
+      <button onclick="document.getElementById('overseer-input').value='Check off my first completed task'; document.getElementById('overseer-form').dispatchEvent(new Event('submit'))" class="px-2.5 py-1 rounded-full bg-white/5 hover:bg-purple-500/20 hover:border-purple-500/40 border border-white/10 text-slate-300 hover:text-purple-200 transition-all">✓ Complete task</button>
+    </div>
+
+    <!-- Messages Container -->
+    <div id="overseer-messages-list" class="flex-1 p-4 overflow-y-auto flex flex-col gap-3.5"></div>
+
+    <!-- Typing Indicator -->
+    <div id="overseer-typing-indicator" class="hidden px-5 py-2 text-[11px] text-purple-300 bg-purple-500/10 flex items-center gap-2">
+      <span class="w-2 h-2 rounded-full bg-purple-400 animate-ping"></span>
+      <span>Gemini Overseer is analyzing your desk...</span>
+    </div>
+
+    <!-- Input Form -->
+    <form id="overseer-form" class="p-3 border-t border-white/10 bg-slate-950/60 flex items-center gap-2">
+      <input 
+        id="overseer-input" 
+        type="text" 
+        placeholder="Overseer, add a task, start a 50m block, or set focus..." 
+        class="flex-1 bg-slate-900 border border-white/15 rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-purple-500/50 transition-all"
+      />
+      <button id="overseer-send-btn" type="submit" class="p-2 rounded-xl bg-purple-500 hover:bg-purple-400 text-slate-950 font-bold transition-all shadow-md">
+        <i data-lucide="send" class="w-4 h-4"></i>
+      </button>
+    </form>
+  </aside>
+
+  <div id="toast-container" class="fixed top-20 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-2 pointer-events-none"></div>
+
+  <!-- Register PWA Service Worker -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch(err => {
+          console.log('[SW] Service worker registration failed:', err);
+        });
+      });
+    }
+  </script>
+
+  <!-- Application Entry Point -->
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

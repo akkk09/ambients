@@ -1,0 +1,20 @@
+# Dependencies
+node_modules/
+.npm
+package-lock.json
+
+# Environment & API Keys
+.env
+.env.local
+*.local
+
+# User Data & Logs
+data/users.json
+logs/
+*.log
+
+# OS & Editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

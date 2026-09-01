@@ -1,0 +1,340 @@
+/* Ambients - High-End Distraction-Free & Adaptive Theme Engine v4 */
+
+:root {
+  --bg-primary: #000000;
+  --bg-card: rgba(18, 18, 18, 0.8);
+  --bg-card-hover: rgba(28, 28, 28, 0.9);
+  --border-subtle: rgba(255, 255, 255, 0.1);
+  --border-focus: rgba(56, 189, 248, 0.5);
+  --text-main: #ededed;
+  --text-muted: #888888;
+  --text-dim: #555555;
+  --accent-cyan: #38bdf8;
+  --accent-violet: #a855f7;
+  --accent-emerald: #10b981;
+  --accent-amber: #f59e0b;
+  --accent-rose: #f43f5e;
+  --radius-panel: 12px;
+  --radius-btn: 8px;
+  --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ========================================================================= */
+/* 1. NEXT.JS / VERCEL MINIMALIST DARK (Default Theme)                        */
+/* ========================================================================= */
+body, body[data-theme="nextjs"], body[data-theme="midnight"] {
+  --bg-primary: #000000;
+  --bg-card: rgba(10, 10, 10, 0.85);
+  --bg-card-hover: rgba(20, 20, 20, 0.95);
+  --border-subtle: rgba(255, 255, 255, 0.12);
+  --border-focus: rgba(255, 255, 255, 0.4);
+  --accent-cyan: #0070f3;
+  --accent-violet: #7928ca;
+  --radius-panel: 10px;
+  --radius-btn: 6px;
+  background-color: #000000;
+  background-image: 
+    radial-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+    radial-gradient(circle at 50% 0%, rgba(120, 119, 198, 0.08) 0%, transparent 60%);
+  background-size: 24px 24px, 100% 100%;
+}
+
+body[data-theme="nextjs"] .glass-panel,
+body[data-theme="midnight"] .glass-panel {
+  border-radius: var(--radius-panel);
+  border: 1px solid var(--border-subtle);
+  background: rgba(10, 10, 10, 0.8);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.05), 0 8px 24px -4px rgba(0, 0, 0, 0.8);
+  transition: transform 0.25s var(--ease-spring), border-color 0.25s ease;
+}
+
+body[data-theme="nextjs"] button,
+body[data-theme="midnight"] button {
+  transition: all 0.2s var(--ease-spring);
+}
+
+body[data-theme="nextjs"] button:active,
+body[data-theme="midnight"] button:active {
+  transform: scale(0.97);
+}
+
+/* ========================================================================= */
+/* 2. BUBBLY SAKURA / CYBER PINK (Playful, Bouncy, Confetti-Rich)            */
+/* ========================================================================= */
+body[data-theme="sakura"], body[data-theme="sunset"] {
+  --bg-primary: #120710;
+  --bg-card: rgba(36, 15, 30, 0.82);
+  --bg-card-hover: rgba(50, 20, 42, 0.92);
+  --border-subtle: rgba(244, 114, 182, 0.22);
+  --border-focus: rgba(244, 114, 182, 0.6);
+  --text-main: #fff0f5;
+  --text-muted: #f472b6;
+  --accent-cyan: #f472b6;
+  --accent-violet: #ec4899;
+  --accent-rose: #fb7185;
+  --radius-panel: 28px;
+  --radius-btn: 20px;
+  background-color: #120710;
+  background-image: 
+    radial-gradient(circle at 15% 15%, rgba(244, 114, 182, 0.15) 0%, transparent 45%),
+    radial-gradient(circle at 85% 85%, rgba(236, 72, 153, 0.12) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(251, 113, 133, 0.08) 0%, transparent 100%);
+}
+
+body[data-theme="sakura"] .glass-panel,
+body[data-theme="sunset"] .glass-panel {
+  border-radius: var(--radius-panel) !important;
+  border: 1.5px solid rgba(244, 114, 182, 0.3);
+  background: rgba(34, 14, 28, 0.85);
+  box-shadow: 0 12px 36px -6px rgba(244, 114, 182, 0.15), 0 0 20px rgba(236, 72, 153, 0.1);
+  backdrop-filter: blur(20px);
+}
+
+body[data-theme="sakura"] button,
+body[data-theme="sunset"] button {
+  border-radius: var(--radius-btn) !important;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+}
+
+body[data-theme="sakura"] button:hover,
+body[data-theme="sunset"] button:hover {
+  transform: translateY(-2px) scale(1.04);
+  box-shadow: 0 4px 16px rgba(244, 114, 182, 0.3);
+}
+
+body[data-theme="sakura"] button:active,
+body[data-theme="sunset"] button:active {
+  transform: scale(0.92);
+}
+
+body[data-theme="sakura"] input,
+body[data-theme="sakura"] select,
+body[data-theme="sunset"] input,
+body[data-theme="sunset"] select {
+  border-radius: 18px !important;
+}
+
+/* ========================================================================= */
+/* 3. CYBERPUNK MATRIX TERMINAL (Phosphor Green, Tech Brackets)              */
+/* ========================================================================= */
+body[data-theme="matrix"], body[data-theme="obsidian"] {
+  --bg-primary: #020604;
+  --bg-card: rgba(4, 18, 10, 0.9);
+  --bg-card-hover: rgba(8, 28, 16, 0.95);
+  --border-subtle: rgba(16, 185, 129, 0.25);
+  --border-focus: rgba(16, 185, 129, 0.7);
+  --text-main: #d1fae5;
+  --text-muted: #34d399;
+  --accent-cyan: #10b981;
+  --accent-violet: #059669;
+  --radius-panel: 4px;
+  --radius-btn: 3px;
+  background-color: #020604;
+  background-image: 
+    linear-gradient(rgba(16, 185, 129, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(16, 185, 129, 0.04) 1px, transparent 1px),
+    radial-gradient(circle at 50% 50%, rgba(5, 150, 105, 0.1) 0%, transparent 80%);
+  background-size: 20px 20px, 20px 20px, 100% 100%;
+}
+
+body[data-theme="matrix"] .glass-panel,
+body[data-theme="obsidian"] .glass-panel {
+  border-radius: 4px !important;
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  box-shadow: 0 0 15px rgba(16, 185, 129, 0.15), inset 0 0 20px rgba(16, 185, 129, 0.03);
+}
+
+body[data-theme="matrix"] .font-mono-timer,
+body[data-theme="obsidian"] .font-mono-timer {
+  text-shadow: 0 0 12px rgba(16, 185, 129, 0.6);
+  letter-spacing: 2px;
+}
+
+body[data-theme="matrix"] button,
+body[data-theme="obsidian"] button {
+  border-radius: 4px !important;
+  text-transform: uppercase;
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.5px;
+}
+
+/* ========================================================================= */
+/* 4. WARM LO-FI COFFEE HOUSE (Roasted Mocha & Sepia Paper)                 */
+/* ========================================================================= */
+body[data-theme="coffee"], body[data-theme="espresso"] {
+  --bg-primary: #0d0806;
+  --bg-card: rgba(28, 18, 14, 0.85);
+  --bg-card-hover: rgba(38, 26, 20, 0.95);
+  --border-subtle: rgba(245, 158, 11, 0.2);
+  --border-focus: rgba(245, 158, 11, 0.6);
+  --text-main: #fef3c7;
+  --text-muted: #d97706;
+  --accent-cyan: #f59e0b;
+  --accent-violet: #d97706;
+  --radius-panel: 16px;
+  --radius-btn: 10px;
+  background-color: #0d0806;
+  background-image: 
+    radial-gradient(circle at 20% 20%, rgba(245, 158, 11, 0.12) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(217, 119, 6, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(120, 53, 15, 0.15) 0%, transparent 100%);
+}
+
+body[data-theme="coffee"] .glass-panel,
+body[data-theme="espresso"] .glass-panel {
+  border-radius: 16px !important;
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  box-shadow: 0 10px 30px -5px rgba(245, 158, 11, 0.1);
+  background: rgba(26, 17, 13, 0.88);
+}
+
+/* ========================================================================= */
+/* 5. NORDIC TWILIGHT AURORA (Cosmic Indigo & Frosted Glass)                 */
+/* ========================================================================= */
+body[data-theme="aurora"] {
+  --bg-primary: #060714;
+  --bg-card: rgba(16, 20, 48, 0.8);
+  --bg-card-hover: rgba(24, 30, 70, 0.9);
+  --border-subtle: rgba(167, 139, 250, 0.22);
+  --border-focus: rgba(167, 139, 250, 0.6);
+  --text-main: #f5f3ff;
+  --text-muted: #a78bfa;
+  --accent-cyan: #818cf8;
+  --accent-violet: #c084fc;
+  --radius-panel: 18px;
+  --radius-btn: 12px;
+  background-color: #060714;
+  background-image: 
+    radial-gradient(circle at 10% 20%, rgba(129, 140, 248, 0.15) 0%, transparent 50%),
+    radial-gradient(circle at 90% 80%, rgba(192, 132, 252, 0.12) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(14, 165, 233, 0.08) 0%, transparent 100%);
+}
+
+body[data-theme="aurora"] .glass-panel {
+  border-radius: 18px !important;
+  border: 1px solid rgba(167, 139, 250, 0.28);
+  backdrop-filter: blur(24px);
+  box-shadow: 0 12px 36px -4px rgba(129, 140, 248, 0.15);
+}
+
+/* ========================================================================= */
+/* 6. ZEN MATCHA STUDIO (Bamboo Sage & Organic Leaves)                       */
+/* ========================================================================= */
+body[data-theme="matcha"] {
+  --bg-primary: #040a06;
+  --bg-card: rgba(12, 26, 15, 0.85);
+  --bg-card-hover: rgba(18, 38, 22, 0.95);
+  --border-subtle: rgba(132, 204, 22, 0.22);
+  --border-focus: rgba(132, 204, 22, 0.6);
+  --text-main: #f7fee7;
+  --text-muted: #a3e635;
+  --accent-cyan: #84cc16;
+  --accent-violet: #65a30d;
+  --radius-panel: 14px;
+  --radius-btn: 8px;
+  background-color: #040a06;
+  background-image: 
+    radial-gradient(circle at 20% 20%, rgba(132, 204, 22, 0.12) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(16, 185, 129, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(21, 128, 61, 0.08) 0%, transparent 100%);
+}
+
+body[data-theme="matcha"] .glass-panel {
+  border-radius: 14px !important;
+  border: 1px solid rgba(132, 204, 22, 0.25);
+  box-shadow: 0 10px 30px -5px rgba(132, 204, 22, 0.1);
+}
+
+/* Common Global Body Setup */
+body {
+  background-attachment: fixed;
+  color: var(--text-main);
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  min-height: 100vh;
+  transition: background-color 0.4s ease, background-image 0.4s ease, color 0.3s ease;
+}
+
+input, textarea, select, button, a {
+  user-select: text;
+  pointer-events: auto;
+}
+
+button, [role="button"] {
+  user-select: none;
+  cursor: pointer;
+}
+
+.font-mono-timer {
+  font-family: 'JetBrains Mono', monospace;
+  font-feature-settings: 'tnum' on, 'zero' on;
+}
+
+/* Focus Pulse */
+.ambient-dot-pulse {
+  box-shadow: 0 0 10px var(--accent-cyan);
+  animation: pulse-ring 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse-ring {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.45;
+    transform: scale(0.9);
+  }
+}
+
+/* Desk tab styling */
+.desk-tab-btn {
+  color: var(--text-muted);
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.desk-tab-btn.active {
+  color: var(--text-main);
+  border-bottom: 2px solid var(--accent-cyan);
+}
+
+/* Flashcard 3D Perspective & Flip */
+.flashcard-container {
+  perspective: 1000px;
+  width: 100%;
+  min-height: 220px;
+}
+
+.flashcard-inner {
+  position: relative;
+  width: 100%;
+  min-height: 220px;
+  text-align: center;
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-style: preserve-3d;
+  cursor: pointer;
+}
+
+.flashcard-inner.flipped {
+  transform: rotateY(180deg);
+}
+
+.flashcard-front, .flashcard-back {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  border-radius: var(--radius-panel);
+  display: flex;
+  flex-col: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+}
+
+.flashcard-back {
+  transform: rotateY(180deg);
+}
