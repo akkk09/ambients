@@ -67,8 +67,13 @@ export function renderIcons(root = document) {
   });
 }
 
-// Auto-run on DOM ready
+// Auto-run on DOM ready and expose globally
 if (typeof document !== 'undefined') {
+  // Expose globally for dynamic re-renders
+  window.renderIcons = renderIcons;
+  // Lucide compatibility shim — any code calling window.lucide.createIcons() works
+  window.lucide = { createIcons: renderIcons };
+
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => renderIcons());
   } else {

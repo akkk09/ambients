@@ -42,17 +42,8 @@
   <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
 
-  <!-- High-Speed Self-Contained SVG Icons & Lucide Fallback -->
+  <!-- Self-Contained SVG Icons (zero CDN dependency) -->
   <script type="module" src="js/icons.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.1/dist/umd/lucide.min.js"></script>
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      if (window.lucide) window.lucide.createIcons();
-    });
-    window.addEventListener('load', () => {
-      if (window.lucide) window.lucide.createIcons();
-    });
-  </script>
 
   <!-- Custom CSS -->
   <link rel="stylesheet" href="css/style.css">

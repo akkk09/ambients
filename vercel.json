@@ -1,33 +1,23 @@
 {
   "version": 2,
-  "rewrites": [
+  "builds": [
     {
-      "source": "/api/(.*)",
-      "destination": "/api/index.js"
+      "src": "api/index.js",
+      "use": "@vercel/node"
     },
     {
-      "source": "/css/(.*)",
-      "destination": "/public/css/$1"
-    },
-    {
-      "source": "/js/(.*)",
-      "destination": "/public/js/$1"
-    },
-    {
-      "source": "/favicon.ico",
-      "destination": "/public/favicon.ico"
-    },
-    {
-      "source": "/manifest.json",
-      "destination": "/public/manifest.json"
-    },
-    {
-      "source": "/sw.js",
-      "destination": "/public/sw.js"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/public/index.html"
+      "src": "public/**",
+      "use": "@vercel/static"
     }
+  ],
+  "routes": [
+    { "src": "/api/(.*)", "dest": "/api/index.js" },
+    { "src": "/js/(.*)",  "dest": "/public/js/$1" },
+    { "src": "/css/(.*)", "dest": "/public/css/$1" },
+    { "src": "/sw.js",    "dest": "/public/sw.js" },
+    { "src": "/manifest.json", "dest": "/public/manifest.json" },
+    { "src": "/favicon.ico",   "dest": "/public/favicon.ico" },
+    { "src": "/(.*\\.(js|css|json|png|jpg|svg|ico|woff2?|ttf|eot|map))$", "dest": "/public/$1" },
+    { "src": "/(.*)", "dest": "/public/index.html" }
   ]
 }
