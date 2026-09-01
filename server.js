@@ -262,9 +262,10 @@ Return ONLY a valid JSON object matching this schema:
 });
 
 // =========================================================================
-// 5. USER ACCOUNTS & PERSISTENT AUTHENTICATION API (SUPABASE + LOCAL STORE)
+// 5. USER ACCOUNTS & PERSISTENT AUTHENTICATION API (AIVEN POSTGRES + LOCAL STORE)
 // =========================================================================
 const fs = require('fs');
+const { Pool } = require('pg');
 const { createClient } = require('@supabase/supabase-js');
 
 const DATA_DIR = path.join(__dirname, 'data');
@@ -274,15 +275,61 @@ if (!fs.existsSync(DATA_DIR)) {
   fs.mkdirSync(DATA_DIR, { recursive: true });
 }
 
-// Initialize Supabase Client if credentials are provided in env
+// 1. Aiven / Managed PostgreSQL Database Connection
+const pgConnectionString = process.env.AIVEN_DATABASE_URL || process.env.DATABASE_URL || process.env.POSTGRES_URL || process.env.PGURI || '';
+let pgPool = null;
+
+if (pgConnectionString) {
+  try {
+    pgPool = new Pool({
+      connectionString: pgConnectionString,
+      ssl: {
+        rejectUnauthorized: false
+      },
+      max: 10,
+      idleTimeoutMillis: 30000
+    });
+
+    // Auto-initialize tables on Aiven
+    pgPool.query(`
+      CREATE TABLE IF NOT EXISTS ambients_users (
+        id TEXT PRIMARY KEY,
+        username TEXT UNIQUE NOT NULL,
+        salt TEXT NOT NULL,
+        password_hash TEXT NOT NULL,
+        profile JSONB DEFAULT '{}'::jsonb,
+        exam_target JSONB DEFAULT '{}'::jsonb,
+        metrics JSONB DEFAULT '{}'::jsonb,
+        activity_log JSONB DEFAULT '{}'::jsonb,
+        tasks JSONB DEFAULT '[]'::jsonb,
+        marks JSONB DEFAULT '[]'::jsonb,
+        companion JSONB DEFAULT '{}'::jsonb,
+        gemini_key TEXT DEFAULT '',
+        chat_history JSONB DEFAULT '[]'::jsonb,
+        theme TEXT DEFAULT 'nextjs',
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        updated_at TIMESTAMPTZ DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS idx_ambients_users_username ON ambients_users(username);
+    `).then(() => {
+      console.log('⚡ [Aiven PostgreSQL] Tables initialized & ready in cloud database!');
+    }).catch(err => {
+      console.warn('[Aiven PostgreSQL Init Warning]:', err.message);
+    });
+
+    console.log('⚡ [Aiven PostgreSQL] Connected to Managed Cloud Database.');
+  } catch (err) {
+    console.error('[Aiven PostgreSQL Connect Error]:', err);
+  }
+}
+
+// 2. Supabase Fallback (if configured)
 const supabaseUrl = process.env.SUPABASE_URL || '';
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || '';
 const supabase = (supabaseUrl && supabaseKey) ? createClient(supabaseUrl, supabaseKey) : null;
 
-if (supabase) {
-  console.log('[Supabase] Connected to Cloud Database at:', supabaseUrl);
-} else {
-  console.log('[Supabase] No SUPABASE_URL found; using local data/users.json storage.');
+if (!pgPool && !supabase) {
+  console.log('[Database] No Aiven/Supabase URI found; using local data/users.json storage.');
 }
 
 function loadUsersFromDisk() {
@@ -312,9 +359,40 @@ function hashPassword(password, salt) {
   return crypto.scryptSync(password, salt, 32).toString('hex');
 }
 
-// Unified Store Helpers
+// Unified Cloud / Local Store Helpers
 async function getStoredUser(username) {
   const clean = username.trim().toLowerCase();
+
+  // A. Try Aiven PostgreSQL
+  if (pgPool) {
+    try {
+      const result = await pgPool.query('SELECT * FROM ambients_users WHERE username = $1 LIMIT 1', [clean]);
+      if (result.rows && result.rows.length > 0) {
+        const row = result.rows[0];
+        return {
+          id: row.id,
+          username: row.username,
+          salt: row.salt,
+          passwordHash: row.password_hash,
+          profile: row.profile || {},
+          examTarget: row.exam_target,
+          metrics: row.metrics,
+          activityLog: row.activity_log || {},
+          tasks: row.tasks || [],
+          marks: row.marks || [],
+          companion: row.companion || {},
+          geminiKey: row.gemini_key || '',
+          chatHistory: row.chat_history || [],
+          theme: row.theme || 'nextjs',
+          createdAt: row.created_at
+        };
+      }
+    } catch (err) {
+      console.warn('[Aiven PostgreSQL Query Error]:', err.message);
+    }
+  }
+
+  // B. Try Supabase
   if (supabase) {
     try {
       const { data, error } = await supabase
@@ -346,6 +424,8 @@ async function getStoredUser(username) {
       console.warn('[Supabase Fetch Error]:', err.message);
     }
   }
+
+  // C. Local file store fallback
   return userDatabase[clean] || null;
 }
 
@@ -354,6 +434,50 @@ async function saveStoredUser(userObj) {
   userDatabase[clean] = userObj;
   saveUsersToDisk(userDatabase);
 
+  // A. Save to Aiven PostgreSQL
+  if (pgPool) {
+    try {
+      const query = `
+        INSERT INTO ambients_users (
+          id, username, salt, password_hash, profile, exam_target, metrics, activity_log,
+          tasks, marks, companion, gemini_key, chat_history, theme, updated_at
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, NOW())
+        ON CONFLICT (username) DO UPDATE SET
+          profile = EXCLUDED.profile,
+          exam_target = EXCLUDED.exam_target,
+          metrics = EXCLUDED.metrics,
+          activity_log = EXCLUDED.activity_log,
+          tasks = EXCLUDED.tasks,
+          marks = EXCLUDED.marks,
+          companion = EXCLUDED.companion,
+          gemini_key = EXCLUDED.gemini_key,
+          chat_history = EXCLUDED.chat_history,
+          theme = EXCLUDED.theme,
+          updated_at = NOW();
+      `;
+      const values = [
+        userObj.id,
+        clean,
+        userObj.salt,
+        userObj.passwordHash,
+        JSON.stringify(userObj.profile || {}),
+        JSON.stringify(userObj.examTarget || {}),
+        JSON.stringify(userObj.metrics || {}),
+        JSON.stringify(userObj.activityLog || {}),
+        JSON.stringify(userObj.tasks || []),
+        JSON.stringify(userObj.marks || []),
+        JSON.stringify(userObj.companion || {}),
+        userObj.geminiKey || '',
+        JSON.stringify(userObj.chatHistory || []),
+        userObj.theme || 'nextjs'
+      ];
+      await pgPool.query(query, values);
+    } catch (err) {
+      console.warn('[Aiven PostgreSQL Upsert Error]:', err.message);
+    }
+  }
+
+  // B. Save to Supabase
   if (supabase) {
     try {
       const payload = {
@@ -373,8 +497,7 @@ async function saveStoredUser(userObj) {
         theme: userObj.theme,
         updated_at: new Date().toISOString()
       };
-      const { error } = await supabase.from('ambients_users').upsert(payload);
-      if (error) console.warn('[Supabase Save Warning]:', error.message);
+      await supabase.from('ambients_users').upsert(payload);
     } catch (err) {
       console.warn('[Supabase Upsert Error]:', err.message);
     }
