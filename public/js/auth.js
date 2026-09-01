@@ -61,7 +61,14 @@ class AuthManager {
         })
       });
 
-      const data = await res.json();
+      let data = {};
+      const responseText = await res.text();
+      try {
+        data = JSON.parse(responseText);
+      } catch (_) {
+        throw new Error(res.ok ? 'Unexpected response format' : (responseText.slice(0, 100) || 'Server error during registration'));
+      }
+
       if (!res.ok) {
         throw new Error(data.error || 'Registration failed');
       }
@@ -77,7 +84,7 @@ class AuthManager {
       nudgeManager.showToast(`Welcome to Ambients, ${data.user.profile.name}! 🚀`, 'info', 3000);
       return { success: true };
     } catch (err) {
-      nudgeManager.showToast(err.message, 'warning', 3000);
+      nudgeManager.showToast(err.message, 'warning', 3500);
       return { success: false, error: err.message };
     }
   }
@@ -90,7 +97,14 @@ class AuthManager {
         body: JSON.stringify({ username, password })
       });
 
-      const data = await res.json();
+      let data = {};
+      const responseText = await res.text();
+      try {
+        data = JSON.parse(responseText);
+      } catch (_) {
+        throw new Error(res.ok ? 'Unexpected response format' : (responseText.slice(0, 100) || 'Server error during login'));
+      }
+
       if (!res.ok) {
         throw new Error(data.error || 'Login failed');
       }
@@ -106,7 +120,7 @@ class AuthManager {
       nudgeManager.showToast(`Welcome back, ${data.user.profile.name}! 📚`, 'info', 3000);
       return { success: true };
     } catch (err) {
-      nudgeManager.showToast(err.message, 'warning', 3000);
+      nudgeManager.showToast(err.message, 'warning', 3500);
       return { success: false, error: err.message };
     }
   }
