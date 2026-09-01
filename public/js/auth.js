@@ -151,58 +151,65 @@ class AuthManager {
   applyUserDataToSession(user) {
     if (!user) return;
 
-    // 1. Profile Name
-    const nameInput = document.getElementById('my-name-input');
-    if (nameInput && user.profile?.name) {
-      nameInput.value = user.profile.name;
-    }
+    try {
+      // 1. Profile Name
+      const nameInput = document.getElementById('my-name-input');
+      if (nameInput && user.profile?.name) {
+        nameInput.value = user.profile.name;
+      }
 
-    // 2. Exam Target
-    if (user.examTarget) {
-      storage.saveExamTarget(user.examTarget);
-      if (window.examManager) window.examManager.renderUI();
-    }
-
-    // 3. Consistency Metrics & Heatmap
-    if (user.metrics) {
-      storage.saveMetrics(user.metrics);
-      if (window.appMetrics?.updateMetricsUI) window.appMetrics.updateMetricsUI();
-    }
-    if (user.activityLog) {
-      localStorage.setItem('ambients_activity_30d', JSON.stringify(user.activityLog));
-      if (window.heatmapManager) window.heatmapManager.renderHeatmap();
-    }
-
-    // 4. Gemini Key
-    if (user.geminiKey) {
-      localStorage.setItem('ambients_gemini_key', user.geminiKey);
-      const keyInput = document.getElementById('gemini-key-input');
-      if (keyInput) keyInput.value = user.geminiKey;
-    }
-
-    // 5. Tasks & Marks
-    if (user.tasks && user.tasks.length > 0) {
-      storage.saveTasks(user.tasks);
-      if (window.taskManager) {
-        window.taskManager.myTasks = user.tasks;
-        if (typeof window.taskManager.renderMyTasks === 'function') {
-          window.taskManager.renderMyTasks();
+      // 2. Exam Target
+      if (user.examTarget) {
+        storage.saveExamTarget(user.examTarget);
+        if (window.examManager && typeof window.examManager.render === 'function') {
+          window.examManager.render();
         }
       }
-    }
-    if (user.marks && user.marks.length > 0) {
-      storage.saveMarks(user.marks);
-      if (window.marksManager) {
-        window.marksManager.marks = user.marks;
-        if (typeof window.marksManager.renderMarks === 'function') {
-          window.marksManager.renderMarks();
+
+      // 3. Consistency Metrics & Heatmap
+      if (user.metrics) {
+        storage.saveMetrics(user.metrics);
+      }
+      if (user.activityLog) {
+        localStorage.setItem('ambients_activity_30d', JSON.stringify(user.activityLog));
+        if (window.heatmapManager && typeof window.heatmapManager.render === 'function') {
+          window.heatmapManager.render();
         }
       }
-    }
 
-    // 6. Theme
-    if (user.theme && window.ambientsApp?.applyTheme) {
-      window.ambientsApp.applyTheme(user.theme);
+      // 4. Gemini Key
+      if (user.geminiKey) {
+        localStorage.setItem('ambients_gemini_key', user.geminiKey);
+        const keyInput = document.getElementById('gemini-key-input');
+        if (keyInput) keyInput.value = user.geminiKey;
+      }
+
+      // 5. Tasks & Marks
+      if (user.tasks && user.tasks.length > 0) {
+        storage.saveTasks(user.tasks);
+        if (window.taskManager) {
+          window.taskManager.myTasks = user.tasks;
+          if (typeof window.taskManager.renderMyTasks === 'function') {
+            window.taskManager.renderMyTasks();
+          }
+        }
+      }
+      if (user.marks && user.marks.length > 0) {
+        storage.saveMarks(user.marks);
+        if (window.marksManager) {
+          window.marksManager.marks = user.marks;
+          if (typeof window.marksManager.renderMarks === 'function') {
+            window.marksManager.renderMarks();
+          }
+        }
+      }
+
+      // 6. Theme
+      if (user.theme && window.ambientsApp?.applyTheme) {
+        window.ambientsApp.applyTheme(user.theme);
+      }
+    } catch (err) {
+      console.warn('[AuthManager] applyUserDataToSession error:', err.message);
     }
   }
 
