@@ -484,6 +484,10 @@ button, [role="button"] {
   pointer-events: none !important;
 }
 
+#landing-hero {
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+
 .hidden {
   display: none !important;
 }

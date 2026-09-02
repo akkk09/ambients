@@ -25,6 +25,7 @@ import { authManager } from './auth.js';
 import { overseerManager } from './chat.js';
 import { themeFX } from './particles.js';
 import { renderIcons } from './icons.js';
+import { landingManager } from './landing.js';
 
 class AmbientsApp {
   constructor() {
@@ -34,37 +35,69 @@ class AmbientsApp {
 
   async init() {
     // 0. User Authentication & Multi-User State
-    await authManager.init();
+    try {
+      await authManager.init();
+    } catch (e) {
+      console.warn('[App] AuthManager init warning:', e);
+    }
 
-    // 1. Storage & Metrics
-    this.initMetrics();
+    // 1. Landing & Onboarding
+    try {
+      landingManager.init();
+    } catch (e) {
+      console.warn('[App] LandingManager init warning:', e);
+    }
 
-    // 2. Mount All UI Modules & Particle FX
-    themeFX.init();
-    window.themeFX = themeFX;
-    this.mountDOM();
+    // 2. Storage & Metrics
+    try {
+      this.initMetrics();
+    } catch (e) {
+      console.warn('[App] Metrics init warning:', e);
+    }
 
-    // 3. Connect to WebSocket room
-    this.connectRoom(this.roomId);
+    // 3. Mount All UI Modules & Particle FX
+    try {
+      themeFX.init();
+      window.themeFX = themeFX;
+    } catch (e) {
+      console.warn('[App] ThemeFX init warning:', e);
+    }
 
-    // 4. Global Keyboard Shortcuts
+    try {
+      this.mountDOM();
+    } catch (e) {
+      console.warn('[App] MountDOM warning:', e);
+    }
+
+    // 4. Connect to Realtime room
+    try {
+      this.connectRoom(this.roomId);
+    } catch (e) {
+      console.warn('[App] ConnectRoom warning:', e);
+    }
+
+    // 5. Global Keyboard Shortcuts
     this.setupKeyboardShortcuts();
 
-    // 5. Soundscapes & Binaural Beats Mixer
+    // 6. Soundscapes & Binaural Beats Mixer
     this.setupAudioSettingsModal();
     this.setupSoundscapeMixer();
 
-    // 6. Desk View Switchers (Tasks vs Marks)
+    // 7. Desk View Switchers (Tasks vs Marks)
     this.setupDeskTabSwitchers();
 
-    // 7. Room Share Controls
+    // 8. Room Share Controls
     this.setupRoomShareControls();
 
-    // 8. Gemini AI Feature Bindings & Overseer Chat
+    // 9. Gemini AI Feature Bindings & Overseer Chat
     this.setupGeminiAI();
-    overseerManager.init();
+    try {
+      overseerManager.init();
+    } catch (e) {
+      console.warn('[App] Overseer init warning:', e);
+    }
 
-    // 9. Ambient Color Themes
+    // 10. Ambient Color Themes
     this.setupThemePicker();
 
     // Render Vector Icons
