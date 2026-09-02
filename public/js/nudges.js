@@ -162,6 +162,14 @@ export class NudgeManager {
     const sender = fromName || 'Partner';
     const message = `${config.emoji} <strong>${sender}</strong>: ${text || config.text}`;
     this.showToast(message, 'nudge', 2200);
+
+    // OS Notification if tab is hidden
+    if (document.hidden && 'Notification' in window && Notification.permission === 'granted') {
+      new Notification(`${config.emoji} ${sender}`, {
+        body: text || config.text,
+        icon: '/favicon.ico'
+      });
+    }
   }
 
   spawnFloatingParticles(emoji) {

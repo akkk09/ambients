@@ -153,6 +153,11 @@ export class SessionTimer {
   }
 
   toggleRunState() {
+    // Request notification permission on first interaction
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+
     this.isRunning = !this.isRunning;
 
     if (this.isRunning) {
