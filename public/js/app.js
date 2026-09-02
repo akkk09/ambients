@@ -26,6 +26,8 @@ import { overseerManager } from './chat.js';
 import { themeFX } from './particles.js';
 import { renderIcons } from './icons.js';
 import { landingManager } from './landing.js';
+import { mediaManager } from './media.js';
+import { rtcManager } from './rtc.js';
 
 class AmbientsApp {
   constructor() {
@@ -339,6 +341,18 @@ class AmbientsApp {
       presenceDot: document.getElementById('zen-presence-dot'),
       exitBtn: document.getElementById('zen-exit-btn'),
       zenToggleBtn: document.getElementById('top-zen-btn')
+    });
+
+    // 13. Sync Lofi Player
+    mediaManager.mount({
+      playBtn: document.getElementById('media-play-btn'),
+      volSlider: document.getElementById('media-vol-slider'),
+      trackTitle: document.getElementById('media-track-title')
+    });
+
+    // 14. Voice Channels
+    rtcManager.mount({
+      joinBtn: document.getElementById('voice-join-btn')
     });
 
     // Tag & Effort selectors

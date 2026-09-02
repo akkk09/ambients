@@ -647,6 +647,31 @@ app.post(['/api/ably-token', '/ably-token'], async (req, res) => {
   }
 });
 
+app.get('/api/rooms/active', async (req, res) => {
+  const ablyKey = process.env.ABLY_API_KEY;
+  if (!ablyKey) {
+    return res.json({ rooms: [] });
+  }
+  try {
+    const ablyRest = new Ably.Rest({ key: ablyKey });
+    
+    // Use Ably REST API to fetch active channels with namespace 'ambients:'
+    const result = await ablyRest.request('get', '/channels', { prefix: 'ambients:', by: 'id' });
+    if (!result || !result.items) return res.json({ rooms: [] });
+    
+    const rooms = result.items.map(channelStr => {
+      // channelStr e.g. "ambients:quiet-haven-42"
+      const roomId = channelStr.replace('ambients:', '');
+      return { id: roomId };
+    });
+    
+    return res.json({ rooms });
+  } catch (err) {
+    console.error('[Ably Channels Error]:', err);
+    res.status(500).json({ error: 'Failed to fetch active rooms' });
+  }
+});
+
 // Fallback for unmatched API requests: Always JSON
 app.use((req, res) => {
   res.status(404).json({ error: `Route not found: ${req.method} ${req.url}` });

@@ -32,6 +32,45 @@ export class LandingManager {
     }
 
     this.bindEvents();
+    this.fetchPublicLobbies();
+  }
+
+  async fetchPublicLobbies() {
+    try {
+      const res = await fetch('/api/rooms/active');
+      const data = await res.json();
+      this.renderLobbies(data.rooms || []);
+    } catch (e) {
+      console.warn('Failed to fetch lobbies:', e);
+    }
+  }
+
+  renderLobbies(rooms) {
+    let container = document.getElementById('landing-lobbies');
+    if (!container) {
+      // Create it if it doesn't exist
+      const interactiveBox = document.querySelector('#landing-hero .max-w-md');
+      if (!interactiveBox) return;
+      container = document.createElement('div');
+      container.id = 'landing-lobbies';
+      container.className = 'mt-5 flex flex-col gap-2 w-full text-left';
+      interactiveBox.appendChild(container);
+    }
+
+    if (rooms.length === 0) {
+      container.innerHTML = `<div class="text-xs text-slate-500 text-center py-2">No public lobbies active right now. Start one above!</div>`;
+      return;
+    }
+
+    container.innerHTML = `
+      <div class="text-[10px] uppercase font-bold tracking-wider text-slate-500 mb-1">Live Public Lobbies</div>
+      ${rooms.map(room => `
+        <div class="flex items-center justify-between p-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 cursor-pointer transition-colors" onclick="document.getElementById('landing-room-input').value = '${room.id}'; document.getElementById('landing-enter-btn').click();">
+          <span class="text-xs font-mono text-sky-400">#${room.id}</span>
+          <span class="text-[10px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded">Join</span>
+        </div>
+      `).join('')}
+    `;
   }
 
   showLanding() {
