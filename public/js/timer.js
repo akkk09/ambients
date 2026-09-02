@@ -71,16 +71,7 @@ export class SessionTimer {
       }
     });
 
-    wsClient.on('TIMER_TICK', (data) => {
-      if (this.isLinked && data) {
-        this.remaining = data.remaining;
-        this.isRunning = data.isRunning;
-        if (data.isFinished) {
-          this.handleTimerFinished();
-        }
-        this.render();
-      }
-    });
+    // Network TIMER_TICK is no longer needed since timers are deterministic locally based on absolute timestamps.
   }
 
   applyServerTimerState(timerState) {
@@ -103,19 +94,28 @@ export class SessionTimer {
 
   startLocalTicker() {
     this.stopLocalTicker();
+    
+    // Use absolute timestamps to completely eliminate drift and skipping
+    this.tickerStartedAt = Date.now();
+    this.tickerInitialRemaining = this.remaining;
+
     this.intervalId = setInterval(() => {
+      const elapsedSeconds = (Date.now() - this.tickerStartedAt) / 1000;
+
       if (this.mode === 'stopwatch') {
-        this.remaining++;
+        this.remaining = Math.floor(this.tickerInitialRemaining + elapsedSeconds);
       } else {
-        if (this.remaining > 0) {
-          this.remaining--;
-          if (this.remaining === 0) {
-            this.handleTimerFinished();
-          }
+        const newRemaining = Math.max(0, Math.ceil(this.tickerInitialRemaining - elapsedSeconds));
+        
+        if (this.remaining > 0 && newRemaining === 0) {
+          this.remaining = 0;
+          this.handleTimerFinished();
+        } else {
+          this.remaining = newRemaining;
         }
       }
       this.render();
-    }, 1000);
+    }, 250); // 250ms interval ensures UI updates instantly on the second boundary without jitter
   }
 
   stopLocalTicker() {

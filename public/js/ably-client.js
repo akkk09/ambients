@@ -363,23 +363,12 @@ export class RealtimeClient {
   }
 
   startHostTimerTicker() {
-    this.stopHostTimerTicker();
-    this.timerInterval = setInterval(() => {
-      if (this.roomTimer.isRunning) {
-        const state = this.computeTimerState();
-        this.emitLocal('TIMER_TICK', state);
-        if (this.channel && !this.isSoloMode) {
-          this.sendToChannel('TIMER_TICK', state);
-        }
-      }
-    }, 1000);
+    // Deprecated: We no longer spam TIMER_TICK over the network.
+    // timer.js handles local ticking via absolute timestamps.
   }
 
   stopHostTimerTicker() {
-    if (this.timerInterval) {
-      clearInterval(this.timerInterval);
-      this.timerInterval = null;
-    }
+    // Deprecated
   }
 
   generateInitialSnapshot(partner) {
