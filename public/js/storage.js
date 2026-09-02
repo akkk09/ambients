@@ -340,9 +340,9 @@ export const storage = {
 
   getLastRoom() {
     try {
-      return localStorage.getItem(STORAGE_KEYS.SAVED_ROOM) || 'focus-room';
+      return localStorage.getItem(STORAGE_KEYS.SAVED_ROOM) || null;
     } catch (e) {
-      return 'focus-room';
+      return null;
     }
   }
 };

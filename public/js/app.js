@@ -127,16 +127,21 @@ class AmbientsApp {
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('room')) return urlParams.get('room');
 
-    const adjectives = ['calm', 'quiet', 'deep', 'steady', 'gentle', 'ambient', 'silent', 'zen'];
-    const nouns = ['haven', 'desk', 'zone', 'grove', 'flow', 'orbit', 'focus', 'space'];
-    const randomName = `${adjectives[Math.floor(Math.random() * adjectives.length)]}-${nouns[Math.floor(Math.random() * nouns.length)]}-${Math.floor(10 + Math.random() * 90)}`;
+    // If no room is specified in URL, check if they have a saved room from a previous session
+    const lastRoom = storage.getLastRoom();
+    if (lastRoom) {
+      window.location.hash = `room=${lastRoom}`;
+      return lastRoom;
+    }
 
-    const lastRoom = storage.getLastRoom() || randomName;
-    window.location.hash = `room=${lastRoom}`;
-    return lastRoom;
+    // Otherwise, they are a new visitor. We don't force a room yet.
+    // The LandingManager will handle onboarding and assign a random room.
+    return null;
   }
 
   connectRoom(roomId) {
+    if (!roomId) return; // Wait for landing page
+    
     this.roomId = roomId;
     storage.setLastRoom(roomId);
 
