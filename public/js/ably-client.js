@@ -46,10 +46,10 @@ export class RealtimeClient {
   }
 
   getOrCreatePeerId() {
-    let id = localStorage.getItem('ambients_peer_id');
+    let id = sessionStorage.getItem('ambients_peer_id');
     if (!id) {
       id = 'peer_' + Math.random().toString(36).substring(2, 11);
-      localStorage.setItem('ambients_peer_id', id);
+      sessionStorage.setItem('ambients_peer_id', id);
     }
     return id;
   }
@@ -216,13 +216,48 @@ export class RealtimeClient {
         if (payload.targetPeerId === this.peerId) {
           this.hasReceivedSnapshot = true;
           this.roomTimer = payload.snapshot.timer || this.roomTimer;
-          this.emitLocal('ROOM_SNAPSHOT', payload.snapshot);
+          
+          // Re-map the snapshot so it is symmetrical from our local perspective
+          const remote = payload.snapshot;
+          const localSnapshot = {
+            roomId: remote.roomId,
+            peerId: this.peerId,
+            slot: this.slot,
+            timer: remote.timer,
+            scratchpad: remote.scratchpad,
+            myProfile: this.profile,
+            myStatus: { state: 'deep_focus', isTabActive: true, lastActiveTime: Date.now() },
+            myTasks: this.profile?.tasks || [],
+            myMarks: this.profile?.marks || [],
+            myCompanion: this.profile?.companion || { type: 'bonsai', stage: 1, xp: 20 },
+            myExamTarget: this.profile?.examTarget || null,
+            // The host's 'myProfile' is actually OUR partner!
+            partner: {
+              id: remote.peerId,
+              slot: remote.slot,
+              profile: remote.myProfile || {},
+              status: remote.myStatus || {},
+              tasks: remote.myTasks || [],
+              marks: remote.myMarks || [],
+              companion: remote.myCompanion || {},
+              examTarget: remote.myExamTarget || null
+            },
+            serverTime: remote.serverTime
+          };
+          
+          this.emitLocal('ROOM_SNAPSHOT', localSnapshot);
         }
         break;
       }
 
       case 'TIMER_ACTION': {
         this.handleTimerAction(payload);
+        break;
+      }
+
+      case 'SCRATCHPAD_UPDATED': {
+        this.scratchpadContent = payload.content;
+        this.emitLocal(type, payload);
         break;
       }
 
@@ -354,7 +389,7 @@ export class RealtimeClient {
       slot: this.slot,
       timer: this.computeTimerState(),
       scratchpad: {
-        content: `# Shared Study Notes & Formulas 📝\n\n- Welcome to your quiet co-working space!\n- Jot down formulas, shared goals, or quick reference links here.\n- Updates sync automatically in real-time.`,
+        content: this.scratchpadContent || `# Shared Study Notes & Formulas 📝\n\n- Welcome to your quiet co-working space!\n- Jot down formulas, shared goals, or quick reference links here.\n- Updates sync automatically in real-time.`,
         lastUpdatedBy: null,
         lastUpdatedAt: Date.now()
       },
@@ -530,6 +565,7 @@ export class RealtimeClient {
       }
 
       case 'SCRATCHPAD_UPDATE': {
+        this.scratchpadContent = payload.content;
         if (this.channel && !this.isSoloMode) {
           this.sendToChannel('SCRATCHPAD_UPDATED', {
             content: payload.content,
